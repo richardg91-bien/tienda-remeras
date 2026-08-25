@@ -1,14 +1,13 @@
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import jwt      from "jsonwebtoken";
+import supabase  from "../config/supabase.js";
 
-// ── Verifica access token ─────────────────────────────────
+// ── Verifica access token y agrega req.user ───────────────
 export const protect = async (req, res, next) => {
   try {
-    // Acepta token en header Authorization o en cookie
     const authHeader = req.headers.authorization;
     let token = null;
 
-    if (authHeader && authHeader.startsWith("Bearer ")) {
+    if (authHeader?.startsWith("Bearer ")) {
       token = authHeader.split(" ")[1];
     } else if (req.cookies?.accessToken) {
       token = req.cookies.accessToken;
@@ -18,18 +17,20 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: "No autenticado. Token requerido." });
     }
 
-    // Verifica y decodifica
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Busca el usuario (sin el password)
-    const user = await User.findById(decoded.id).select("-password -refreshToken");
-    if (!user) {
-      return res.status(401).json({ message: "Usuario no encontrado." });
-    }
+    // Busca el usuario en Supabase (sin campos sensibles)
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, first_name, last_name, email, phone, role, is_verified, avatar_url, bio, address, created_at")
+      .eq("id", decoded.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!user) return res.status(401).json({ message: "Usuario no encontrado." });
 
     req.user = user;
     next();
-
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Token expirado.", code: "TOKEN_EXPIRED" });
@@ -49,17 +50,22 @@ export const adminOnly = (req, res, next) => {
   next();
 };
 
-// ── Opcional: agrega el usuario si hay token, pero no falla si no hay ────
+// ── Opcional: adjunta usuario si hay token, no falla si no ─
 export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
+    if (authHeader?.startsWith("Bearer ")) {
+      const token   = authHeader.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password -refreshToken");
+      const { data } = await supabase
+        .from("users")
+        .select("id, first_name, last_name, email, role, avatar_url")
+        .eq("id", decoded.id)
+        .maybeSingle();
+      req.user = data ?? null;
     }
   } catch {
-    // Silencioso: si el token falla, req.user queda undefined
+    req.user = null;
   }
   next();
 };

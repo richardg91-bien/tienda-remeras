@@ -1,6 +1,7 @@
-import jwt from "jsonwebtoken";
+import jwt            from "jsonwebtoken";
+import bcrypt         from "bcryptjs";
 import { validationResult } from "express-validator";
-import User from "../models/User.js";
+import supabase       from "../config/supabase.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -18,48 +19,71 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-const cookieOptions = {
+const COOKIE_OPTS = {
   httpOnly: true,
   secure:   process.env.NODE_ENV === "production",
   sameSite: "strict",
   path:     "/",
 };
 
+/** Devuelve el usuario sin campos sensibles */
+const sanitize = (user) => {
+  const { password_hash, refresh_token, ...safe } = user;
+  return safe;
+};
+
 // ── POST /api/auth/register ───────────────────────────────────────────────────
 export const register = async (req, res) => {
-  // Valida campos con express-validator
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
-  }
+  if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
   try {
-    const { firstName, lastName, email, password, phone } = req.body;
+    const { firstName, lastName, email, password, phone = "" } = req.body;
 
-    // Verifica que el email no esté en uso
-    const exists = await User.findOne({ email });
-    if (exists) {
+    // ¿Ya existe ese email?
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+
+    if (existing) {
       return res.status(409).json({ message: "Ya existe una cuenta con ese email." });
     }
 
-    const user = await User.create({ firstName, lastName, email, password, phone });
+    const password_hash = await bcrypt.hash(password, 12);
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { data: user, error } = await supabase
+      .from("users")
+      .insert({
+        first_name:    firstName,
+        last_name:     lastName,
+        email:         email.toLowerCase(),
+        password_hash,
+        phone,
+      })
+      .select()
+      .single();
 
-    // Guarda refresh token hasheado en DB
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+    if (error) throw error;
 
-    // Envía refresh token como cookie httpOnly
+    const { accessToken, refreshToken } = generateTokens(user.id);
+
+    // Guarda refresh token en DB
+    await supabase
+      .from("users")
+      .update({ refresh_token: refreshToken })
+      .eq("id", user.id);
+
     res.cookie("refreshToken", refreshToken, {
-      ...cookieOptions,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
+      ...COOKIE_OPTS,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(201).json({
-      message: "Cuenta creada exitosamente.",
+      message:     "Cuenta creada exitosamente.",
       accessToken,
-      user: user.toPublic(),
+      user:        sanitize(user),
     });
   } catch (error) {
     console.error("register error:", error);
@@ -70,38 +94,40 @@ export const register = async (req, res) => {
 // ── POST /api/auth/login ──────────────────────────────────────────────────────
 export const login = async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
-  }
+  if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
   try {
     const { email, password } = req.body;
 
-    // Busca con password (select: false en el schema, hay que pedirlo explícito)
-    const user = await User.findOne({ email }).select("+password +refreshToken");
-    if (!user) {
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")                        // necesitamos password_hash
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const valid = user && await bcrypt.compare(password, user.password_hash);
+    if (!user || !valid) {
       return res.status(401).json({ message: "Email o contraseña incorrectos." });
     }
 
-    const valid = await user.comparePassword(password);
-    if (!valid) {
-      return res.status(401).json({ message: "Email o contraseña incorrectos." });
-    }
+    const { accessToken, refreshToken } = generateTokens(user.id);
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
-
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+    await supabase
+      .from("users")
+      .update({ refresh_token: refreshToken })
+      .eq("id", user.id);
 
     res.cookie("refreshToken", refreshToken, {
-      ...cookieOptions,
+      ...COOKIE_OPTS,
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     return res.json({
       message:     "Login exitoso.",
       accessToken,
-      user: user.toPublic(),
+      user:        sanitize(user),
     });
   } catch (error) {
     console.error("login error:", error);
@@ -112,25 +138,30 @@ export const login = async (req, res) => {
 // ── POST /api/auth/refresh ────────────────────────────────────────────────────
 export const refresh = async (req, res) => {
   const token = req.cookies?.refreshToken || req.body?.refreshToken;
-
-  if (!token) {
-    return res.status(401).json({ message: "Refresh token requerido." });
-  }
+  if (!token) return res.status(401).json({ message: "Refresh token requerido." });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    const user    = await User.findById(decoded.id).select("+refreshToken");
 
-    if (!user || user.refreshToken !== token) {
+    const { data: user } = await supabase
+      .from("users")
+      .select("id, refresh_token")
+      .eq("id", decoded.id)
+      .maybeSingle();
+
+    if (!user || user.refresh_token !== token) {
       return res.status(401).json({ message: "Refresh token inválido o revocado." });
     }
 
-    const { accessToken, refreshToken: newRefresh } = generateTokens(user._id);
-    user.refreshToken = newRefresh;
-    await user.save({ validateBeforeSave: false });
+    const { accessToken, refreshToken: newRefresh } = generateTokens(user.id);
+
+    await supabase
+      .from("users")
+      .update({ refresh_token: newRefresh })
+      .eq("id", user.id);
 
     res.cookie("refreshToken", newRefresh, {
-      ...cookieOptions,
+      ...COOKIE_OPTS,
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
@@ -141,19 +172,18 @@ export const refresh = async (req, res) => {
 };
 
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
-export const me = async (req, res) => {
-  // req.user ya viene del middleware protect
-  return res.json({ user: req.user });
-};
+export const me = (req, res) => res.json({ user: req.user });
 
 // ── POST /api/auth/logout ─────────────────────────────────────────────────────
 export const logout = async (req, res) => {
   try {
-    // Revoca el refresh token en DB
     if (req.user) {
-      await User.findByIdAndUpdate(req.user._id, { refreshToken: "" });
+      await supabase
+        .from("users")
+        .update({ refresh_token: "" })
+        .eq("id", req.user.id);
     }
-    res.clearCookie("refreshToken", cookieOptions);
+    res.clearCookie("refreshToken", COOKIE_OPTS);
     return res.json({ message: "Sesión cerrada." });
   } catch (error) {
     console.error("logout error:", error);

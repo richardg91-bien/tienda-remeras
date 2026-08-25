@@ -1,50 +1,54 @@
 import { validationResult } from "express-validator";
-import Design from "../models/Design.js";
-import User   from "../models/User.js";
-import { cloudinary, uploadDesign } from "../config/cloudinary.js";
+import supabase  from "../config/supabase.js";
+import { cloudinary, uploadDesign, uploadToCloudinary } from "../config/cloudinary.js";
 
 // ── POST /api/designs ─────────────────────────────────────────────────────────
-// Sube una imagen de diseño a Cloudinary y guarda en DB
 export const createDesign = [
-  // Middleware multer inline para manejar el error en el mismo request
   (req, res, next) => uploadDesign.single("image")(req, res, (err) => {
     if (err) return res.status(400).json({ message: err.message });
     next();
   }),
   async (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: "Se requiere una imagen." });
-      }
+      if (!req.file) return res.status(400).json({ message: "Se requiere una imagen." });
 
       const { title, description, tags, category, isPublic } = req.body;
 
-      const design = await Design.create({
-        owner: req.user._id,
-        image: {
-          url:      req.file.path,
-          publicId: req.file.filename,
-          format:   req.file.format,
-          bytes:    req.file.size,
-          width:    req.file.width,
-          height:   req.file.height,
-        },
-        title:       title || "Sin título",
-        description: description || "",
-        tags:        tags ? (Array.isArray(tags) ? tags : tags.split(",").map((t) => t.trim())) : [],
-        category:    category || "otro",
-        isPublic:    isPublic === "true" || isPublic === true,
+      // Sube a Cloudinary
+      const imageResult = await uploadToCloudinary(req.file.buffer, {
+        folder:         "neon-stitch/designs",
+        transformation: [{ width: 1200, height: 1200, crop: "limit", quality: "auto" }],
       });
 
-      // Agrega referencia al usuario
-      await User.findByIdAndUpdate(req.user._id, {
-        $push: { designs: design._id },
-      });
+      // Normaliza tags
+      const tagsArr = tags
+        ? (Array.isArray(tags) ? tags : tags.split(",").map((t) => t.trim().toLowerCase()))
+        : [];
 
-      return res.status(201).json({
-        message: "Diseño subido exitosamente.",
-        design,
-      });
+      const { data: design, error } = await supabase
+        .from("designs")
+        .insert({
+          owner_id:        req.user.id,
+          image_url:       imageResult.url,
+          image_public_id: imageResult.publicId,
+          image_meta:      {
+            width:  imageResult.width,
+            height: imageResult.height,
+            format: imageResult.format,
+            bytes:  imageResult.bytes,
+          },
+          title:       title || "Sin título",
+          description: description || "",
+          tags:        tagsArr,
+          category:    category || "otro",
+          is_public:   isPublic === "true" || isPublic === true,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return res.status(201).json({ message: "Diseño subido exitosamente.", design });
     } catch (error) {
       console.error("createDesign error:", error);
       return res.status(500).json({ message: "Error subiendo diseño." });
@@ -52,32 +56,41 @@ export const createDesign = [
   },
 ];
 
-// ── GET /api/designs ──────────────────────────────────────────────────────────
-// Galería pública: diseños aprobados y públicos de todos los usuarios
+// ── GET /api/designs — Galería pública ────────────────────────────────────────
 export const getPublicDesigns = async (req, res) => {
   try {
-    const page     = Math.max(1, parseInt(req.query.page)     || 1);
-    const limit    = Math.min(50, parseInt(req.query.limit)   || 12);
+    const page     = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit    = Math.min(50, parseInt(req.query.limit) || 12);
     const category = req.query.category || null;
-    const tags     = req.query.tags     ? req.query.tags.split(",") : null;
-    const skip     = (page - 1) * limit;
+    const from     = (page - 1) * limit;
+    const to       = from + limit - 1;
 
-    const filter = { isPublic: true, status: "approved" };
-    if (category) filter.category = category;
-    if (tags)     filter.tags = { $in: tags };
+    let query = supabase
+      .from("designs")
+      .select(`
+        id, title, description, tags, category,
+        image_url, image_meta, likes, views, created_at,
+        owner:owner_id ( id, first_name, last_name, avatar_url )
+      `, { count: "exact" })
+      .eq("is_public", true)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
-    const [designs, total] = await Promise.all([
-      Design.find(filter)
-        .populate("owner", "firstName lastName avatar.url")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      Design.countDocuments(filter),
-    ]);
+    if (category) query = query.eq("category", category);
+
+    // Filtro por tags (contiene al menos uno)
+    if (req.query.tags) {
+      const tagsArr = req.query.tags.split(",").map((t) => t.trim());
+      query = query.overlaps("tags", tagsArr);
+    }
+
+    const { data: designs, count, error } = await query;
+    if (error) throw error;
 
     return res.json({
       designs,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      pagination: { page, limit, total: count, pages: Math.ceil(count / limit) },
     });
   } catch (error) {
     console.error("getPublicDesigns error:", error);
@@ -85,25 +98,26 @@ export const getPublicDesigns = async (req, res) => {
   }
 };
 
-// ── GET /api/designs/mine ─────────────────────────────────────────────────────
-// Diseños del usuario autenticado (todos los estados)
+// ── GET /api/designs/mine — Mis diseños ───────────────────────────────────────
 export const getMyDesigns = async (req, res) => {
   try {
     const page  = Math.max(1, parseInt(req.query.page)  || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 12);
-    const skip  = (page - 1) * limit;
+    const from  = (page - 1) * limit;
+    const to    = from + limit - 1;
 
-    const [designs, total] = await Promise.all([
-      Design.find({ owner: req.user._id })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      Design.countDocuments({ owner: req.user._id }),
-    ]);
+    const { data: designs, count, error } = await supabase
+      .from("designs")
+      .select("*", { count: "exact" })
+      .eq("owner_id", req.user.id)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
 
     return res.json({
       designs,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      pagination: { page, limit, total: count, pages: Math.ceil(count / limit) },
     });
   } catch (error) {
     console.error("getMyDesigns error:", error);
@@ -114,21 +128,25 @@ export const getMyDesigns = async (req, res) => {
 // ── GET /api/designs/:id ──────────────────────────────────────────────────────
 export const getDesignById = async (req, res) => {
   try {
-    const design = await Design.findById(req.params.id)
-      .populate("owner", "firstName lastName avatar.url");
+    const { data: design, error } = await supabase
+      .from("designs")
+      .select(`
+        *,
+        owner:owner_id ( id, first_name, last_name, avatar_url )
+      `)
+      .eq("id", req.params.id)
+      .maybeSingle();
 
-    if (!design) {
-      return res.status(404).json({ message: "Diseño no encontrado." });
-    }
+    if (error) throw error;
+    if (!design) return res.status(404).json({ message: "Diseño no encontrado." });
 
-    // Solo públicos/aprobados, o el dueño
-    const isOwner = req.user && design.owner._id.toString() === req.user._id.toString();
-    if (!design.isPublic && !isOwner) {
+    const isOwner = req.user?.id === design.owner_id;
+    if (!design.is_public && !isOwner) {
       return res.status(403).json({ message: "Acceso denegado." });
     }
 
-    // Incrementa views
-    await Design.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    // Incrementa views (fire-and-forget)
+    supabase.from("designs").update({ views: design.views + 1 }).eq("id", design.id);
 
     return res.json({ design });
   } catch (error) {
@@ -140,24 +158,30 @@ export const getDesignById = async (req, res) => {
 // ── PUT /api/designs/:id ──────────────────────────────────────────────────────
 export const updateDesign = async (req, res) => {
   try {
-    const design = await Design.findById(req.params.id);
-    if (!design) return res.status(404).json({ message: "Diseño no encontrado." });
+    const { data: design } = await supabase
+      .from("designs").select("owner_id").eq("id", req.params.id).maybeSingle();
 
-    if (design.owner.toString() !== req.user._id.toString()) {
+    if (!design) return res.status(404).json({ message: "Diseño no encontrado." });
+    if (design.owner_id !== req.user.id) {
       return res.status(403).json({ message: "No podés editar este diseño." });
     }
 
-    const { title, description, tags, category, isPublic } = req.body;
-    if (title       !== undefined) design.title       = title;
-    if (description !== undefined) design.description = description;
-    if (category    !== undefined) design.category    = category;
-    if (isPublic    !== undefined) design.isPublic    = isPublic;
-    if (tags        !== undefined) {
-      design.tags = Array.isArray(tags) ? tags : tags.split(",").map((t) => t.trim());
+    const updates = {};
+    if (req.body.title       !== undefined) updates.title       = req.body.title;
+    if (req.body.description !== undefined) updates.description = req.body.description;
+    if (req.body.category    !== undefined) updates.category    = req.body.category;
+    if (req.body.isPublic    !== undefined) updates.is_public   = req.body.isPublic;
+    if (req.body.tags        !== undefined) {
+      updates.tags = Array.isArray(req.body.tags)
+        ? req.body.tags
+        : req.body.tags.split(",").map((t) => t.trim().toLowerCase());
     }
 
-    await design.save();
-    return res.json({ message: "Diseño actualizado.", design });
+    const { data: updated, error } = await supabase
+      .from("designs").update(updates).eq("id", req.params.id).select().single();
+
+    if (error) throw error;
+    return res.json({ message: "Diseño actualizado.", design: updated });
   } catch (error) {
     console.error("updateDesign error:", error);
     return res.status(500).json({ message: "Error actualizando diseño." });
@@ -167,26 +191,26 @@ export const updateDesign = async (req, res) => {
 // ── DELETE /api/designs/:id ───────────────────────────────────────────────────
 export const deleteDesign = async (req, res) => {
   try {
-    const design = await Design.findById(req.params.id);
+    const { data: design } = await supabase
+      .from("designs")
+      .select("owner_id, image_public_id")
+      .eq("id", req.params.id)
+      .maybeSingle();
+
     if (!design) return res.status(404).json({ message: "Diseño no encontrado." });
 
-    const isOwner = design.owner.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "admin";
+    const isOwner = design.owner_id === req.user.id;
+    const isAdmin = req.user.role   === "admin";
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: "No podés eliminar este diseño." });
     }
 
-    // Elimina de Cloudinary
-    if (design.image?.publicId) {
-      await cloudinary.uploader.destroy(design.image.publicId);
+    if (design.image_public_id) {
+      await cloudinary.uploader.destroy(design.image_public_id);
     }
 
-    await Design.findByIdAndDelete(req.params.id);
-
-    // Quita referencia del usuario
-    await User.findByIdAndUpdate(design.owner, {
-      $pull: { designs: design._id },
-    });
+    const { error } = await supabase.from("designs").delete().eq("id", req.params.id);
+    if (error) throw error;
 
     return res.json({ message: "Diseño eliminado." });
   } catch (error) {
@@ -198,13 +222,19 @@ export const deleteDesign = async (req, res) => {
 // ── POST /api/designs/:id/like ────────────────────────────────────────────────
 export const likeDesign = async (req, res) => {
   try {
-    const design = await Design.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { likes: 1 } },
-      { new: true }
-    );
-    if (!design) return res.status(404).json({ message: "Diseño no encontrado." });
-    return res.json({ likes: design.likes });
+    // Llama a una función RPC de Supabase para incrementar atómicamente
+    const { data, error } = await supabase.rpc("increment_likes", { design_id: req.params.id });
+
+    if (error) {
+      // Fallback si la función RPC no existe aún: update manual
+      const { data: d } = await supabase
+        .from("designs").select("likes").eq("id", req.params.id).single();
+      await supabase
+        .from("designs").update({ likes: (d?.likes ?? 0) + 1 }).eq("id", req.params.id);
+      return res.json({ likes: (d?.likes ?? 0) + 1 });
+    }
+
+    return res.json({ likes: data });
   } catch (error) {
     return res.status(500).json({ message: "Error." });
   }

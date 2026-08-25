@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 
 // ── Configuración de Cloudinary ──────────────────────────
@@ -10,37 +9,10 @@ cloudinary.config({
   secure:     true,
 });
 
-// ── Storage para diseños de remeras ─────────────────────
-const designStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder:         "neon-stitch/designs",
-    allowed_formats: ["jpg", "jpeg", "png", "webp", "svg"],
-    transformation: [
-      { width: 1200, height: 1200, crop: "limit", quality: "auto" },
-    ],
-  },
-});
+// ── Multer: almacena en memoria (buffer) ─────────────────
+// El controller sube manualmente a Cloudinary con upload_stream
+const memoryStorage = multer.memoryStorage();
 
-// ── Storage para avatares de usuario ─────────────────────
-const avatarStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder:         "neon-stitch/avatars",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [
-      { width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" },
-    ],
-  },
-});
-
-// ── Límites de tamaño ─────────────────────────────────────
-const LIMITS = {
-  designs: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  avatars: { fileSize: 2 * 1024 * 1024  }, // 2 MB
-};
-
-// ── Filtro de tipos de archivo ────────────────────────────
 const imageFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
@@ -49,18 +21,39 @@ const imageFilter = (req, file, cb) => {
   }
 };
 
-// ── Instancias de multer exportadas ──────────────────────
+// Uploader para diseños (10 MB)
 export const uploadDesign = multer({
-  storage: designStorage,
-  limits:  LIMITS.designs,
+  storage:    memoryStorage,
+  limits:     { fileSize: 10 * 1024 * 1024 },
   fileFilter: imageFilter,
 });
 
+// Uploader para avatares (2 MB)
 export const uploadAvatar = multer({
-  storage: avatarStorage,
-  limits:  LIMITS.avatars,
+  storage:    memoryStorage,
+  limits:     { fileSize: 2 * 1024 * 1024 },
   fileFilter: imageFilter,
 });
 
-// Exporta cloudinary para usarlo en controllers (eliminar, etc.)
+/**
+ * Sube un buffer a Cloudinary y devuelve { url, publicId, width, height, format, bytes }
+ * @param {Buffer} buffer
+ * @param {object} options  — folder, transformation, etc.
+ */
+export const uploadToCloudinary = (buffer, options = {}) =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error);
+      resolve({
+        url:      result.secure_url,
+        publicId: result.public_id,
+        width:    result.width,
+        height:   result.height,
+        format:   result.format,
+        bytes:    result.bytes,
+      });
+    });
+    stream.end(buffer);
+  });
+
 export { cloudinary };
