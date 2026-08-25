@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import * as fabric from "fabric";
@@ -31,7 +31,6 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas }) {
   const selectedView = useSelector((s) => s.designer.selectedView);
   const { activeCanvas, selectedObject, setSelectedObject } = useCanvas();
   const { addItem, openCart } = useCart();
-  const fileInputRef = useRef(null);
 
   const [textProps, setTextProps] = useState({
     text: "", color: "#ffffff", font: "arial", fontSize: 20,
@@ -95,34 +94,6 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas }) {
   };
 
   // ── Acciones sobre el canvas ──────────────────────────
-  const addImage = (e) => {
-    if (!activeCanvas || !e.target.files?.[0]) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.src = ev.target.result;
-      img.onload = () => {
-        const fabricImg = new fabric.Image(img);
-        const maxW = CANVAS_CONFIG.width  * 0.5;
-        const maxH = CANVAS_CONFIG.height * 0.5;
-        if (fabricImg.width > maxW || fabricImg.height > maxH) {
-          const scale = Math.min(maxW / fabricImg.width, maxH / fabricImg.height);
-          fabricImg.scale(scale);
-        }
-        fabricImg.set({
-          left: (activeCanvas.width  - fabricImg.getScaledWidth())  / 2,
-          top:  (activeCanvas.height - fabricImg.getScaledHeight()) / 2,
-        });
-        activeCanvas.add(fabricImg);
-        activeCanvas.setActiveObject(fabricImg);
-        activeCanvas.renderAll();
-        manualSync?.();
-      };
-    };
-    reader.readAsDataURL(e.target.files[0]);
-    e.target.value = "";
-  };
-
   const addText = () => {
     if (!activeCanvas) return;
     const text = new fabric.Textbox("Tu texto aquí", {
@@ -195,10 +166,17 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas }) {
                 Diseño
               </p>
               <div className="flex flex-col gap-2">
-                <input type="file" accept="image/*" ref={fileInputRef}
-                  onChange={addImage} className="hidden" />
-                <ToolBtn icon="image" label="Subir imagen"  onClick={() => fileInputRef.current?.click()} />
                 <ToolBtn icon="title" label="Agregar texto" onClick={addText} />
+                <button
+                  onClick={() => setActiveTab("library")}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
+                             text-xs font-bold uppercase tracking-wider transition-all duration-200
+                             text-gray-300 hover:text-white border border-white/10 hover:border-primary/50
+                             hover:bg-primary/5 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[16px]">photo_library</span>
+                  Ir a biblioteca
+                </button>
               </div>
             </div>
 
