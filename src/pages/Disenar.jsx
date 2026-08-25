@@ -47,7 +47,7 @@ function DesignerContent() {
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
             Herramientas
           </p>
-          <DesignTools manualSync={manualSync} />
+          <DesignTools manualSync={manualSync} frontCanvas={frontCanvas} backCanvas={backCanvas} />
         </div>
       </motion.aside>
 
