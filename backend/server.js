@@ -12,6 +12,7 @@ const { default: authRoutes }    = await import("./routes/authRoutes.js");
 const { default: userRoutes }    = await import("./routes/userRoutes.js");
 const { default: designRoutes }  = await import("./routes/designRoutes.js");
 const { default: paymentRoutes } = await import("./routes/paymentRoutes.js");
+const { default: assetRoutes }   = await import("./routes/assetRoutes.js");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -41,6 +42,7 @@ app.use("/api/auth",     authRoutes);
 app.use("/api/users",    userRoutes);
 app.use("/api/designs",  designRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/assets",   assetRoutes);
 
 // Compatibilidad con el endpoint original del frontend
 app.post("/create_preference", (req, res) =>

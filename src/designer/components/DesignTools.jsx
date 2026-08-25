@@ -4,12 +4,19 @@ import * as fabric from "fabric";
 import { setTshirtColor } from "../store/designerSlice.js";
 import { useCanvas } from "../hooks/useCanvas.jsx";
 import canvasStorageManager from "../utils/canvasStorageManager.js";
+import AssetLibrary from "./AssetLibrary.jsx";
 import {
   CANVAS_CONFIG, DEFAULT_TEXT_CONFIG,
   TSHIRT_COLOR_CODES, FONT_OPTIONS,
 } from "../constants/designConstants.js";
 
+const TABS = [
+  { id: "tools",   icon: "build",         label: "Herramientas" },
+  { id: "library", icon: "photo_library",  label: "Biblioteca"   },
+];
+
 export default function DesignTools({ manualSync }) {
+  const [activeTab, setActiveTab] = useState("tools");
   const dispatch        = useDispatch();
   const tshirtColor     = useSelector((s) => s.designer.tshirtColor);
   const { activeCanvas, selectedObject, setSelectedObject } = useCanvas();
@@ -105,7 +112,30 @@ export default function DesignTools({ manualSync }) {
   const isTextSelected = selectedObject?.type === "textbox";
 
   return (
-    <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+    <div className="flex flex-col h-full gap-3">
+
+      {/* ── Selector de pestañas ── */}
+      <div className="flex gap-1 glass-panel rounded-xl p-1 flex-shrink-0">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg
+                        text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
+              activeTab === tab.id
+                ? "bg-primary text-background"
+                : "text-gray-500 hover:text-white"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[14px]">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Contenido de la pestaña activa ── */}
+      {activeTab === "tools" && (
+        <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1">
 
       {/* ── Sección: Diseño ── */}
       <div>
@@ -205,6 +235,16 @@ export default function DesignTools({ manualSync }) {
             className="border border-white/10 hover:border-red-500/50 text-gray-500 hover:text-red-400" />
         </div>
       </div>
+      </div>
+      )}
+
+      {/* ── Pestaña: Biblioteca ── */}
+      {activeTab === "library" && (
+        <div className="flex-1 overflow-hidden">
+          <AssetLibrary manualSync={manualSync} />
+        </div>
+      )}
+
     </div>
   );
 }
