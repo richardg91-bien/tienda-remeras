@@ -68,6 +68,21 @@ export default function Navbar() {
           NEON-STITCH
         </Link>
 
+        {/* Link Studio — solo desktop, junto al brand */}
+        <Link
+          to="/disenar"
+          className={`hidden md:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2
+                      ml-48 text-xs font-black uppercase tracking-wider transition-colors
+                      px-3 py-1.5 rounded-full ${
+                        location.pathname === "/disenar"
+                          ? "text-background bg-primary neon-glow-sm"
+                          : "text-gray-500 hover:text-primary glass-panel border border-white/10"
+                      }`}
+        >
+          <span className="material-symbols-outlined text-[14px]">design_services</span>
+          Studio
+        </Link>
+
         {/* Acciones derecha */}
         <div className="flex items-center gap-1">
 
@@ -206,8 +221,9 @@ export default function Navbar() {
                    border-t border-white/10 flex justify-around items-center px-4 md:hidden"
         role="navigation"
       >
-        <BottomNavItem to="/"          icon="storefront"    label="Tienda"   active={location.pathname === "/"} />
-        <BottomNavItem to="/catalogo"  icon="auto_awesome"  label="IA Visual" active={location.pathname === "/catalogo"} />
+        <BottomNavItem to="/"          icon="storefront"        label="Tienda"   active={location.pathname === "/"} />
+        <BottomNavItem to="/catalogo"  icon="auto_awesome"      label="Catálogo" active={location.pathname === "/catalogo"} />
+        <BottomNavItem to="/disenar"   icon="design_services"   label="Studio"   active={location.pathname === "/disenar"} />
 
         {/* Carrito — botón especial */}
         <button
