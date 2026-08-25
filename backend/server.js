@@ -1,20 +1,17 @@
+import dotenv       from "dotenv";
+dotenv.config();
+
 import express      from "express";
 import cors         from "cors";
-import dotenv       from "dotenv";
 import cookieParser from "cookie-parser";
 import rateLimit    from "express-rate-limit";
 
-// Inicializa variables de entorno antes de todo
-dotenv.config();
-
-// Inicializa Supabase (verifica conexión al arrancar)
-import "./config/supabase.js";
-
-// Rutas
-import authRoutes    from "./routes/authRoutes.js";
-import userRoutes    from "./routes/userRoutes.js";
-import designRoutes  from "./routes/designRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
+// Importaciones dinámicas DESPUÉS de dotenv (garantiza que process.env está listo)
+const { default: supabase }      = await import("./config/supabase.js");
+const { default: authRoutes }    = await import("./routes/authRoutes.js");
+const { default: userRoutes }    = await import("./routes/userRoutes.js");
+const { default: designRoutes }  = await import("./routes/designRoutes.js");
+const { default: paymentRoutes } = await import("./routes/paymentRoutes.js");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
