@@ -1,0 +1,22 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno — NUNCA subir al repo
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build / dist
+dist/
+
+# Editor
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db

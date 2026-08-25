@@ -2,9 +2,190 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: black;
-  color: white;
+/* ── Base ────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #0A0A0B;
+    color: #e5e2e3;
+    font-family: 'Inter', sans-serif;
+  }
+
+  ::selection {
+    background-color: rgba(0, 242, 255, 0.25);
+    color: #fff;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #0A0A0B; }
+  ::-webkit-scrollbar-thumb { background: #2a2a2e; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
+}
+
+/* ── Componentes ────────────────────────────────────── */
+@layer components {
+
+  /* Glass panel — card semitransparente con blur */
+  .glass-panel {
+    background: rgba(19, 19, 20, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glass panel con borde cyan */
+  .glass-panel-accent {
+    background: rgba(19, 19, 20, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.06);
+  }
+
+  /* Neon glow (cyan) */
+  .neon-glow {
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.35), 0 0 60px rgba(0, 242, 255, 0.10);
+  }
+  .neon-glow-sm {
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+  }
+
+  /* Botón primario — cyan neón */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-primary text-background font-extrabold uppercase tracking-widest
+           px-8 py-3.5 rounded-full
+           transition-all duration-200
+           hover:scale-105 active:scale-95 neon-glow;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+  }
+
+  /* Botón outline — borde cyan */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2
+           border border-primary text-primary font-extrabold uppercase tracking-widest
+           px-8 py-3.5 rounded-full
+           transition-all duration-200
+           hover:bg-primary/10 active:scale-95;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+  }
+
+  /* Botón terciario — lima neón */
+  .btn-tertiary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-tertiary text-background font-black uppercase tracking-widest
+           px-6 py-3 rounded-xl
+           transition-all duration-200
+           hover:scale-[1.02] active:scale-95;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 18px rgba(189, 236, 0, 0.25);
+  }
+
+  /* Badge/etiqueta */
+  .badge {
+    @apply text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider;
+  }
+  .badge-cyan    { @apply badge bg-primary/20 text-primary border border-primary/30; }
+  .badge-purple  { @apply badge bg-secondary/20 text-secondary border border-secondary/30; }
+  .badge-lime    { @apply badge bg-tertiary/20 text-tertiary border border-tertiary/30; }
+  .badge-solid   { @apply badge bg-secondary text-background; }
+
+  /* Label de sección */
+  .section-label {
+    @apply text-primary text-[11px] font-black tracking-[0.35em] uppercase;
+  }
+
+  /* Título de sección */
+  .section-title {
+    @apply text-4xl md:text-5xl font-black uppercase leading-tight;
+  }
+
+  /* Input oscuro */
+  .input-dark {
+    @apply w-full bg-surface border border-white/10 rounded-xl
+           px-4 py-3 text-white placeholder-gray-600
+           focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20
+           transition-colors duration-200 text-sm;
+  }
+
+  /* Card de producto */
+  .product-card {
+    @apply glass-panel rounded-[2rem] overflow-hidden
+           transition-all duration-300
+           hover:border-primary/30 hover:shadow-card-hover
+           hover:-translate-y-1;
+  }
+
+  /* Línea decorativa neón izquierda */
+  .neon-border-left {
+    @apply border-l-4 border-primary pl-4;
+  }
+}
+
+/* ── Utilidades ─────────────────────────────────────── */
+@layer utilities {
+
+  /* Texto gradiente cyan→purple */
+  .text-gradient-neon {
+    background: linear-gradient(90deg, #00f2ff, #ecb2ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Texto gradiente cyan→lime */
+  .text-gradient-lime {
+    background: linear-gradient(90deg, #00f2ff, #bdec00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Fondo con grid de puntos sutil */
+  .bg-dots {
+    background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Fondo con grid de líneas sutil */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Ocultar scrollbar manteniendo funcionalidad */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Truncar a 2 líneas */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Scan-line effect (decorativo) */
+  .scan-effect::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,242,255,0.4), transparent);
+    animation: scanLine 4s linear infinite;
+    pointer-events: none;
+  }
 }
