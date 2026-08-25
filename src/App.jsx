@@ -1,25 +1,32 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-// Páginas
-import Home from "./pages/Home";
-import Catalogo from "./pages/Catalogo";
+import { CartProvider } from "./context/CartContext";
+import Navbar       from "./components/Navbar";
+import Cart         from "./components/Cart";
+import AIAssistant  from "./components/AIAssistant";
+import Home         from "./pages/Home";
+import Catalogo     from "./pages/Catalogo";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <div className="bg-black text-white min-h-screen">
+    <CartProvider>
+      <BrowserRouter>
+        {/* Navbar fijo (top header + bottom nav mobile) */}
+        <Navbar />
 
+        {/* Rutas principales */}
         <Routes>
-
-          {/* 🏠 Landing principal (marca) */}
-          <Route path="/" element={<Home />} />
-
-          {/* 🛍️ Catálogo de productos */}
+          <Route path="/"         element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
-
+          {/* Fallback: redirige a home */}
+          <Route path="*"         element={<Home />} />
         </Routes>
 
-      </div>
-    </BrowserRouter>
+        {/* Drawer del carrito (global) */}
+        <Cart />
+
+        {/* Asistente IA flotante (global) */}
+        <AIAssistant />
+      </BrowserRouter>
+    </CartProvider>
   );
 }
