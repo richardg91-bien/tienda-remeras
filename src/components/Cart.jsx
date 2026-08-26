@@ -148,23 +148,56 @@ export default function Cart() {
                       transition={{ duration: 0.2 }}
                       className="glass-panel rounded-2xl p-3 flex gap-3"
                     >
-                      {/* Imagen */}
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-16 h-20 object-cover rounded-xl flex-shrink-0"
-                      />
+                      {/* Imagen — tamaño fijo, object-cover para no estirarse */}
+                      <div className="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden bg-zinc-800 border border-white/8">
+                        {item.image && item.image.startsWith("data:") ? (
+                          // Remera personalizada del Studio — muestra preview del diseño
+                          <div className="relative w-full h-full">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-contain p-1"
+                              style={{ backgroundColor: item.designData?.tshirtColor || "#111" }}
+                            />
+                            <span className="absolute bottom-0 right-0 text-[8px] font-black
+                                             bg-secondary text-background px-1 rounded-tl-lg">
+                              3D
+                            </span>
+                          </div>
+                        ) : item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          // Sin imagen — muestra ícono
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="material-symbols-outlined text-gray-600 text-[24px]">
+                              checkroom
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Info */}
                       <div className="flex flex-col flex-1 min-w-0">
-                        <p className="font-black text-sm leading-snug line-clamp-2 text-white">
+                        <p className="font-black text-sm leading-snug line-clamp-1 text-white">
                           {item.name}
                         </p>
-                        {item.selectedSize && (
-                          <p className="text-[11px] text-gray-600 mt-0.5 font-bold uppercase tracking-wider">
-                            Talle: {item.selectedSize}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {item.selectedSize && (
+                            <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">
+                              Talle: {item.selectedSize}
+                            </p>
+                          )}
+                          {item.isCustom && (
+                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full
+                                             bg-secondary/20 text-secondary border border-secondary/30">
+                              Personalizada
+                            </span>
+                          )}
+                        </div>
                         <p className="text-primary font-black text-sm mt-1">
                           {formatPrice(item.price)}
                         </p>
