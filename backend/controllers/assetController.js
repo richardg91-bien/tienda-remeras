@@ -1,5 +1,10 @@
+import { createHash } from "crypto";
 import supabase from "../config/supabase.js";
 import { cloudinary, uploadDesign, uploadToCloudinary } from "../config/cloudinary.js";
+
+// ── Genera hash MD5 de un buffer ──────────────────────────
+const hashBuffer = (buffer) =>
+  createHash("md5").update(buffer).digest("hex");
 
 // ── POST /api/assets ──────────────────────────────────────────────────────────
 export const uploadAsset = [
@@ -13,10 +18,41 @@ export const uploadAsset = [
 
       const { name, category = "general", tags, isSystem = false, isPublic = true } = req.body;
 
+      // ── Calcula hash del archivo ──────────────────────
+      const imageHash = hashBuffer(req.file.buffer);
+
+      // ── Verifica duplicado por hash (mismo contenido) ─
+      const { data: byHash } = await supabase
+        .from("design_assets")
+        .select("id, name, url")
+        .eq("image_hash", imageHash)
+        .maybeSingle();
+
+      if (byHash) {
+        return res.status(409).json({
+          message: "Esta imagen ya existe en el banco.",
+          existing: byHash,
+        });
+      }
+
+      // ── Sube a Cloudinary ─────────────────────────────
       const result = await uploadToCloudinary(req.file.buffer, {
         folder: "neon-stitch/assets",
         transformation: [{ width: 800, height: 800, crop: "limit", quality: "auto" }],
       });
+
+      // ── Verifica duplicado por public_id ──────────────
+      const { data: byPublicId } = await supabase
+        .from("design_assets")
+        .select("id")
+        .eq("public_id", result.publicId)
+        .maybeSingle();
+
+      if (byPublicId) {
+        // Imagen ya en Cloudinary — borra la que se acaba de subir
+        await cloudinary.uploader.destroy(result.publicId);
+        return res.status(409).json({ message: "Imagen duplicada detectada." });
+      }
 
       const tagsArr = tags
         ? (Array.isArray(tags) ? tags : tags.split(",").map((t) => t.trim().toLowerCase()))
@@ -28,6 +64,7 @@ export const uploadAsset = [
           name:        name || req.file.originalname || "Sin nombre",
           url:         result.url,
           public_id:   result.publicId,
+          image_hash:  imageHash,
           category,
           tags:        tagsArr,
           is_system:   isSystem === "true" || isSystem === true,
@@ -45,6 +82,10 @@ export const uploadAsset = [
 
       return res.status(201).json({ message: "Imagen subida al banco.", asset });
     } catch (error) {
+      // Error de constraint única de Postgres (23505)
+      if (error.code === "23505") {
+        return res.status(409).json({ message: "Imagen duplicada — ya existe en el banco." });
+      }
       console.error("uploadAsset error:", error);
       return res.status(500).json({ message: "Error subiendo imagen." });
     }
@@ -136,7 +177,6 @@ export const deleteAsset = async (req, res) => {
 };
 
 // ── GET /api/assets/categories ────────────────────────────────────────────────
-// Devuelve todas las categorías con conteo de imágenes
 export const getCategories = async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -152,15 +192,15 @@ export const getCategories = async (req, res) => {
     }, {});
 
     const categories = [
-      { value: "todos",        label: "Todos" },
-      { value: "logos",        label: "Logos" },
-      { value: "iconos",       label: "Íconos" },
-      { value: "graficos",     label: "Gráficos" },
-      { value: "texturas",     label: "Texturas" },
-      { value: "streetwear",   label: "Streetwear" },
-      { value: "cyberpunk",    label: "Cyberpunk" },
-      { value: "minimalista",  label: "Minimalista" },
-      { value: "general",      label: "General" },
+      { value: "todos",       label: "Todos" },
+      { value: "cyberpunk",   label: "Cyberpunk" },
+      { value: "streetwear",  label: "Streetwear" },
+      { value: "graficos",    label: "Gráficos" },
+      { value: "logos",       label: "Logos" },
+      { value: "minimalista", label: "Minimalista" },
+      { value: "texturas",    label: "Texturas" },
+      { value: "iconos",      label: "Íconos" },
+      { value: "general",     label: "General" },
     ].map((c) => ({ ...c, count: counts[c.value] || 0 }));
 
     return res.json({ categories });

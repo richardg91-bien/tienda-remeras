@@ -1,35 +1,22 @@
 -- ============================================================
--- NEON-STITCH — Limpiar duplicados en Supabase
--- Correr en: Supabase Dashboard → SQL Editor → New Query
+-- NEON-STITCH — Limpieza PRO de duplicados
+-- Correr en: Supabase Dashboard → SQL Editor → New query
 -- ============================================================
 
--- 1. Ver cuántos duplicados hay (mismo url o mismo bytes+width+height)
+-- 1. Ver duplicados por public_id ANTES de borrar
 SELECT
-  url,
+  public_id,
   COUNT(*) as total,
-  array_agg(id) as ids
+  array_agg(id ORDER BY created_at DESC) as ids,
+  array_agg(created_at ORDER BY created_at DESC) as fechas
 FROM design_assets
-GROUP BY url
+GROUP BY public_id
 HAVING COUNT(*) > 1
 ORDER BY total DESC;
 
--- 2. Eliminar duplicados manteniendo el registro más reciente
--- (deja el de mayor id, borra los anteriores)
-DELETE FROM design_assets
-WHERE id IN (
-  SELECT id FROM (
-    SELECT
-      id,
-      ROW_NUMBER() OVER (
-        PARTITION BY url
-        ORDER BY created_at DESC
-      ) as rn
-    FROM design_assets
-  ) sub
-  WHERE rn > 1
-);
-
--- 3. También limpia duplicados por public_id
+-- ────────────────────────────────────────────────────────────
+-- 2. Eliminar duplicados manteniendo el más reciente
+-- ────────────────────────────────────────────────────────────
 DELETE FROM design_assets
 WHERE id IN (
   SELECT id FROM (
@@ -38,13 +25,54 @@ WHERE id IN (
       ROW_NUMBER() OVER (
         PARTITION BY public_id
         ORDER BY created_at DESC
-      ) as rn
+      ) AS rn
     FROM design_assets
   ) sub
   WHERE rn > 1
 );
 
--- 4. Verifica el resultado final
+-- 3. También limpia duplicados por URL (misma imagen, distinto public_id)
+DELETE FROM design_assets
+WHERE id IN (
+  SELECT id FROM (
+    SELECT
+      id,
+      ROW_NUMBER() OVER (
+        PARTITION BY url
+        ORDER BY created_at DESC
+      ) AS rn
+    FROM design_assets
+  ) sub
+  WHERE rn > 1
+);
+
+-- ────────────────────────────────────────────────────────────
+-- 4. Agrega constraint para EVITAR duplicados a futuro
+-- ────────────────────────────────────────────────────────────
+ALTER TABLE design_assets
+  DROP CONSTRAINT IF EXISTS unique_public_id;
+
+ALTER TABLE design_assets
+  ADD CONSTRAINT unique_public_id UNIQUE (public_id);
+
+ALTER TABLE design_assets
+  DROP CONSTRAINT IF EXISTS unique_url;
+
+ALTER TABLE design_assets
+  ADD CONSTRAINT unique_url UNIQUE (url);
+
+-- ────────────────────────────────────────────────────────────
+-- 5. Agrega columna hash para detección futura
+-- ────────────────────────────────────────────────────────────
+ALTER TABLE design_assets
+  ADD COLUMN IF NOT EXISTS image_hash TEXT DEFAULT '';
+
+CREATE INDEX IF NOT EXISTS idx_assets_hash ON design_assets (image_hash)
+  WHERE image_hash != '';
+
+-- ────────────────────────────────────────────────────────────
+-- 6. Resultado final
+-- ────────────────────────────────────────────────────────────
 SELECT
   category,
   COUNT(*) as total

@@ -3,10 +3,10 @@
  * Uso: node scripts/syncFromCloudinary.mjs
  */
 
-// Lee el .env manualmente sin depender de dotenv
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { createHash } from "crypto";
 
 const __dir  = dirname(fileURLToPath(import.meta.url));
 const envPath = join(__dir, "../.env");
@@ -107,17 +107,18 @@ for (let i = 0; i < toInsert.length; i += BATCH) {
   const batch = toInsert.slice(i, i + BATCH);
 
   const rows = batch.map(r => ({
-    name:      r.public_id.split("/").pop().replace(/\.[^.]+$/, "").replace(/-/g, " "),
-    url:       r.secure_url,
-    public_id: r.public_id,
-    category:  getCategory(r.public_id),
-    tags:      ["retro", "vintage", "diseño", "pinterest"],
-    is_system: true,
-    is_public: true,
-    width:     r.width,
-    height:    r.height,
-    format:    r.format,
-    bytes:     r.bytes,
+    name:       r.public_id.split("/").pop().replace(/\.[^.]+$/, "").replace(/-/g, " "),
+    url:        r.secure_url,
+    public_id:  r.public_id,
+    image_hash: createHash("md5").update(r.public_id).digest("hex"),
+    category:   getCategory(r.public_id),
+    tags:       ["retro", "vintage", "diseño", "pinterest"],
+    is_system:  true,
+    is_public:  true,
+    width:      r.width,
+    height:     r.height,
+    format:     r.format,
+    bytes:      r.bytes,
   }));
 
   const { error } = await supabase.from("design_assets").insert(rows);
