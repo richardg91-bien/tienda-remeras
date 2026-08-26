@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../data/products";
@@ -101,9 +102,11 @@ export default function ProductCard({ product }) {
         </span>
 
         {/* Nombre */}
-        <h3 className="font-black text-lg leading-snug mb-2 line-clamp-2 text-white">
+        <Link to={`/producto/${product.id}`}
+          className="font-black text-lg leading-snug mb-2 line-clamp-2 text-white
+                     hover:text-primary transition-colors duration-200 block">
           {product.name}
-        </h3>
+        </Link>
 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mb-3">

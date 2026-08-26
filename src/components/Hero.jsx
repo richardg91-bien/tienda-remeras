@@ -1,5 +1,9 @@
+import { Suspense } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Environment, Float } from "@react-three/drei";
+import { TshirtModel } from "./designer/TshirtModel3D.jsx";
 
 const stagger = {
   hidden: {},
@@ -14,156 +18,176 @@ const fadeIn = {
   show:   { opacity: 1, transition: { duration: 0.5 } },
 };
 
+// Modelo 3D simple para el hero (sin el sistema completo del Studio)
+function HeroTshirt() {
+  return (
+    <Float speed={1.5} rotationIntensity={0.4} floatIntensity={0.6}>
+      <TshirtModel
+        tshirtColor="#111111"
+        designTexture={null}
+        designTextureBack={null}
+      />
+    </Float>
+  );
+}
+
 export default function Hero() {
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-background">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-background">
 
-      {/* ── Fondo animado / shader simulado ── */}
+      {/* ── Fondo ── */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        {/* Gradiente radial cyan superior */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-40" />
-        {/* Orbe cyan izquierda */}
-        <div className="absolute top-[-5%] left-[-10%] w-[500px] h-[500px] rounded-full
-                        bg-primary/6 blur-[120px]" />
-        {/* Orbe purple derecha */}
-        <div className="absolute top-1/4 right-[-5%] w-[350px] h-[350px] rounded-full
-                        bg-secondary/6 blur-[100px]" />
-        {/* Grid sutil */}
+        <div className="absolute top-[-5%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/6 blur-[120px]" />
+        <div className="absolute top-1/4 right-[-5%] w-[350px] h-[350px] rounded-full bg-secondary/6 blur-[100px]" />
         <div className="absolute inset-0 bg-grid opacity-100" />
-        {/* Scan line animada */}
-        <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden pointer-events-none">
+        <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
           <motion.div
-            animate={{ y: ["0vh", "80vh"] }}
+            animate={{ y: ["0vh", "100vh"] }}
             transition={{ repeat: Infinity, duration: 5, ease: "linear", repeatDelay: 2 }}
             className="h-full bg-gradient-to-r from-transparent via-primary/40 to-transparent"
           />
         </div>
       </div>
 
-      {/* ── Contenido principal ── */}
-      <div className="relative z-10 text-center px-6 py-24 max-w-3xl mx-auto">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="show"
-          className="flex flex-col items-center"
-        >
-          {/* Chip colección */}
-          <motion.div variants={fadeIn} className="mb-8">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full
-                             border border-primary/30 text-primary text-[11px] font-black
-                             uppercase tracking-[0.3em] glass-panel">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              Colección Génesis
-            </span>
-          </motion.div>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-20 w-full">
+        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
 
-          {/* Headline */}
-          <motion.h1
-            variants={fadeUp}
-            className="text-5xl md:text-7xl font-black uppercase leading-none mb-6 tracking-tight"
-          >
-            El Futuro del
-            <br />
-            <span className="text-primary neon-glow-sm" style={{ WebkitTextStroke: "0px" }}>
-              Streetwear
-            </span>
-          </motion.h1>
+          {/* ── Copy ── */}
+          <motion.div variants={stagger} initial="hidden" animate="show"
+            className="flex flex-col items-start">
 
-          {/* Subtítulo */}
-          <motion.p
-            variants={fadeUp}
-            className="text-gray-400 max-w-md mx-auto mb-10 text-lg leading-relaxed"
-          >
-            Diseño por IA, Estilo Humano. Prendas hiper-optimizadas con materiales de precisión técnica.
-          </motion.p>
+            <motion.div variants={fadeIn} className="mb-6">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+                               border border-primary/30 text-primary text-[11px] font-black
+                               uppercase tracking-[0.3em] glass-panel">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Colección Génesis 2026
+              </span>
+            </motion.div>
 
-          {/* Stats */}
-          <motion.div variants={fadeUp} className="flex items-center justify-center gap-8 mb-10">
-            {[
-              { value: "500+", label: "Clientes" },
-              { value: "IA",   label: "Analizado" },
-              { value: "48hs", label: "Envío" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-2xl font-black text-primary">{stat.value}</p>
-                <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wider mt-0.5">
-                  {stat.label}
-                </p>
+            <motion.h1 variants={fadeUp}
+              className="text-6xl md:text-7xl xl:text-8xl font-black uppercase leading-none tracking-tight">
+              Diseñá tu<br />
+              <span className="text-primary">remera</span><br />
+              en 3D
+            </motion.h1>
+
+            <motion.p variants={fadeUp}
+              className="text-gray-400 max-w-md mt-6 text-lg leading-relaxed">
+              Personalizá cada detalle. Usá el editor 3D interactivo, el banco de imágenes y la IA para crear la remera exacta que imaginás.
+            </motion.p>
+
+            {/* Stats */}
+            <motion.div variants={fadeUp} className="flex items-center gap-8 mt-8">
+              {[
+                { value: "500+", label: "Clientes" },
+                { value: "514",  label: "Diseños" },
+                { value: "48hs", label: "Envío" },
+              ].map(stat => (
+                <div key={stat.label} className="text-center">
+                  <p className="text-2xl font-black text-primary">{stat.value}</p>
+                  <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wider mt-0.5">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </motion.div>
+
+            {/* CTAs */}
+            <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mt-10">
+              <Link to="/disenar" className="btn-primary text-sm px-8 py-4">
+                <span className="material-symbols-outlined text-[20px]">design_services</span>
+                Diseñar ahora
+              </Link>
+              <Link to="/catalogo" className="btn-outline text-sm px-8 py-4">
+                <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                Ver colección
+              </Link>
+            </motion.div>
+
+            {/* Social proof */}
+            <motion.div variants={fadeUp} className="flex items-center gap-3 mt-8">
+              <div className="flex -space-x-2">
+                {["1521572163474-6864f9cf17ab","1503341455253-b2e723bb3dbb","1618354691373-d851c5c3a990"].map((id,i) => (
+                  <img key={i}
+                    src={`https://images.unsplash.com/photo-${id}?w=40&h=40&fit=crop&crop=face`}
+                    alt="" className="w-8 h-8 rounded-full border-2 border-background object-cover" />
+                ))}
               </div>
-            ))}
+              <div>
+                <div className="flex gap-0.5">
+                  {Array.from({length:5}).map((_,i) => (
+                    <svg key={i} className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-500 mt-0.5">+500 clientes satisfechos</p>
+              </div>
+            </motion.div>
           </motion.div>
 
-          {/* CTAs */}
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4">
-            <Link to="/catalogo" className="btn-primary text-[0.8rem]">
-              <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-              Explorar Colección
-            </Link>
-            <Link to="/catalogo" className="btn-outline text-[0.8rem]">
-              <span className="material-symbols-outlined text-[18px]">psychology</span>
-              Ver Lab de IA
-            </Link>
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* ── Imagen flotante de producto (derecha, solo desktop) ── */}
-      <motion.div
-        initial={{ opacity: 0, x: 60 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="hidden lg:block absolute right-12 top-1/2 -translate-y-1/2 z-10"
-      >
-        <motion.div
-          animate={{ y: [0, -12, 0] }}
-          transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-          className="relative"
-        >
-          {/* Halo neon detrás */}
-          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-[40px] scale-110" />
-
-          {/* Card flotante */}
-          <div className="relative glass-panel rounded-3xl overflow-hidden w-[260px]
-                          border border-primary/20 shadow-[0_0_40px_rgba(0,242,255,0.12)]">
-            <img
-              src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=520&q=85"
-              alt="Neural Web Tee"
-              className="w-full h-[320px] object-cover"
-            />
-            <div className="p-4 border-t border-white/8">
-              <p className="text-[10px] font-black text-primary tracking-widest uppercase mb-1">
-                IA Analizado
-              </p>
-              <p className="font-black text-base text-white">Neural Web Tee</p>
-              <p className="text-primary font-black text-sm mt-0.5">$12.000</p>
-            </div>
-          </div>
-
-          {/* Badge */}
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1, type: "spring", stiffness: 220 }}
-            className="absolute -top-3 -right-3 badge-solid px-3 py-1.5"
+          {/* ── Modelo 3D ── */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="relative h-[500px] lg:h-[600px]"
           >
-            New Drop
-          </motion.span>
-        </motion.div>
-      </motion.div>
+            {/* Halo neon */}
+            <div className="absolute inset-0 rounded-full bg-primary/10 blur-[80px] scale-75
+                            pointer-events-none animate-glow-pulse-cyan" />
+
+            <Canvas camera={{ position: [0, 0, 5], fov: 45 }} className="rounded-3xl">
+              <ambientLight intensity={0.5} />
+              <directionalLight position={[5, 5, 5]} intensity={1} />
+              <pointLight position={[-5, -5, -5]} color="#00f2ff" intensity={0.5} />
+              <Suspense fallback={null}>
+                <HeroTshirt />
+                <Environment preset="night" />
+              </Suspense>
+              <OrbitControls
+                enableZoom={false}
+                enablePan={false}
+                autoRotate
+                autoRotateSpeed={2}
+                minPolarAngle={Math.PI / 3}
+                maxPolarAngle={Math.PI / 1.8}
+              />
+            </Canvas>
+
+            {/* Label flotante */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1 }}
+              className="absolute top-8 right-4 glass-panel-accent rounded-2xl px-4 py-3 max-w-[160px]"
+            >
+              <p className="text-[10px] font-black text-primary uppercase tracking-widest">Design Studio</p>
+              <p className="text-xs font-bold text-white mt-1">Editor 3D en tiempo real</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.2 }}
+              className="absolute bottom-8 left-4 glass-panel-accent rounded-2xl px-4 py-3"
+            >
+              <p className="text-[10px] font-black text-secondary uppercase tracking-widest">IA Integrada</p>
+              <p className="text-xs font-bold text-white mt-1">Diseño por inteligencia artificial</p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
 
       {/* Scroll indicator */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.3 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block"
       >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.6 }}
-          className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center pt-2"
-        >
+        <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.6 }}
+          className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center pt-2">
           <div className="w-1 h-2 rounded-full bg-primary/60" />
         </motion.div>
       </motion.div>

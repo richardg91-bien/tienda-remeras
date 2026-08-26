@@ -5,7 +5,8 @@ import { AnimatePresence } from "framer-motion";
 import Hero from "../components/Hero";
 import Products from "../components/Products";
 import StyleQuiz from "../components/StyleQuiz";
-import { products } from "../data/products";
+import AIAssistant from "../components/AIAssistant";
+import { products, formatPrice } from "../data/products";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
@@ -257,6 +258,100 @@ export default function Home() {
             </motion.div>
           ))}
         </motion.div>
+      </section>
+
+      {/* ── Sección IA visible ── */}
+      <section className="px-6 py-16 max-w-7xl mx-auto">
+        <div className="relative glass-panel-accent rounded-[2.5rem] overflow-hidden">
+          {/* Fondo decorativo */}
+          <div aria-hidden className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-secondary/8 blur-[80px]" />
+            <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-primary/8 blur-[80px]" />
+            <div className="absolute inset-0 bg-grid opacity-30" />
+          </div>
+
+          <div className="relative z-10 grid md:grid-cols-2 gap-0 items-stretch">
+            {/* Copy */}
+            <div className="p-10 md:p-12 flex flex-col justify-center">
+              <motion.div initial="hidden" whileInView="show" viewport={{ once:true }}
+                variants={{ hidden:{}, show:{ transition:{ staggerChildren:0.1 } } }}>
+                <motion.p variants={fadeUp} className="section-label mb-3">
+                  Inteligencia Artificial
+                </motion.p>
+                <motion.h2 variants={fadeUp} className="section-title mb-4">
+                  Describí tu idea,<br />
+                  <span className="text-gradient-neon">la IA la crea</span>
+                </motion.h2>
+                <motion.p variants={fadeUp} className="text-gray-400 mb-6 leading-relaxed">
+                  Nuestro asistente IA entiende tu estilo y te recomienda diseños, talles y combinaciones en segundos. Como tener un diseñador personal.
+                </motion.p>
+                <motion.div variants={fadeUp} className="flex flex-col gap-3">
+                  {[
+                    { icon: "psychology",    text: "\"Quiero algo cyberpunk para el verano\"" },
+                    { icon: "straighten",    text: "\"¿Qué talle me queda si peso 75kg?\"" },
+                    { icon: "auto_awesome",  text: "\"Mostrámé los best sellers de streetwear\"" },
+                  ].map((q, i) => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-3 glass-panel rounded-xl">
+                      <span className="material-symbols-outlined text-primary text-[18px] flex-shrink-0">
+                        {q.icon}
+                      </span>
+                      <p className="text-sm text-gray-300 italic">{q.text}</p>
+                    </div>
+                  ))}
+                </motion.div>
+                <motion.div variants={fadeUp} className="mt-6">
+                  <p className="text-xs text-gray-600 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    Asistente disponible ahora — hacé click en el botón
+                    <span className="material-symbols-outlined text-primary text-[14px]">psychology</span>
+                  </p>
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {/* Visual del chat */}
+            <div className="hidden md:flex flex-col justify-center p-8 border-l border-white/8">
+              <div className="flex flex-col gap-3 max-w-xs mx-auto">
+                {/* Mensaje usuario */}
+                <div className="flex justify-end">
+                  <div className="bg-primary text-background font-bold text-sm px-4 py-2.5
+                                  rounded-2xl rounded-tr-sm max-w-[200px]">
+                    Quiero algo cyberpunk
+                  </div>
+                </div>
+                {/* Respuesta IA */}
+                <div className="flex items-end gap-2">
+                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center
+                                  text-background text-[10px] font-black flex-shrink-0">AI</div>
+                  <div className="glass-panel rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-200 max-w-[220px]">
+                    Para estilo <strong className="text-white">CYBERPUNK</strong> te recomiendo:
+                  </div>
+                </div>
+                {/* Mini cards de productos */}
+                {products.filter(p => p.category === "Cyberpunk").slice(0,2).map(p => (
+                  <div key={p.id} className="flex items-center gap-3 p-2.5 glass-panel rounded-xl ml-9">
+                    <img src={p.image} alt={p.name}
+                      className="w-10 h-12 object-cover rounded-lg flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black text-white line-clamp-1">{p.name}</p>
+                      <p className="text-xs text-primary font-black">{formatPrice(p.price)}</p>
+                    </div>
+                  </div>
+                ))}
+                {/* Typing indicator */}
+                <div className="flex items-center gap-2 ml-9">
+                  <div className="glass-panel rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1">
+                    {[0,1,2].map(i => (
+                      <motion.span key={i} animate={{ y:[0,-4,0] }}
+                        transition={{ repeat:Infinity, duration:0.8, delay:i*0.15 }}
+                        className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── Footer ── */}

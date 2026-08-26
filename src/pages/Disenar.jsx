@@ -12,6 +12,7 @@ import { TshirtModel }          from "../designer/components/TshirtModel.jsx";
 import TshirtCanvas             from "../designer/components/TshirtCanvas.jsx";
 import DesignTools              from "../designer/components/DesignTools.jsx";
 import { TSHIRT_TYPES }         from "../designer/constants/designConstants.js";
+import StudioOnboarding         from "../components/StudioOnboarding.jsx";
 
 // ── Contenido interno (necesita acceso a Redux y CanvasContext) ──────────────
 function DesignerContent() {
@@ -167,6 +168,7 @@ export default function Disenar() {
       <Provider store={designerStore}>
         <CanvasProvider>
           <DesignerContent />
+          <StudioOnboarding />
         </CanvasProvider>
       </Provider>
     </>
