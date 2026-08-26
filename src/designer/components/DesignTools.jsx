@@ -187,12 +187,28 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas }) {
               </p>
               <div className="flex flex-wrap gap-2">
                 {TSHIRT_COLOR_CODES.map((c) => (
-                  <button key={c} onClick={() => dispatch(setTshirtColor(c))} title={c}
-                    className={`w-7 h-7 rounded-full border-2 transition-all duration-150 hover:scale-110 ${
-                      tshirtColor === c ? "border-primary scale-110" : "border-white/20"
+                  <button key={c.hex} onClick={() => dispatch(setTshirtColor(c.hex))} title={c.name}
+                    className={`w-8 h-8 rounded-full border-2 transition-all duration-150
+                                hover:scale-110 relative group ${
+                      tshirtColor === c.hex ? "border-primary scale-110" : "border-white/20"
                     }`}
-                    style={{ backgroundColor: c }}
-                  />
+                    style={{ backgroundColor: c.hex }}
+                  >
+                    {tshirtColor === c.hex && (
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[13px]"
+                              style={{ color: ["#DEDFDC","#E8C6A6","#FDD107"].includes(c.hex) ? "#000" : "#fff" }}>
+                          check
+                        </span>
+                      </span>
+                    )}
+                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px]
+                                     font-bold text-white bg-zinc-900 px-1.5 py-0.5 rounded
+                                     opacity-0 group-hover:opacity-100 transition-opacity
+                                     whitespace-nowrap pointer-events-none z-10">
+                      {c.name}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>

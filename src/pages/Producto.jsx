@@ -5,6 +5,27 @@ import { products, formatPrice } from "../data/products";
 import { useCart } from "../context/CartContext";
 import Products from "../components/Products";
 
+// Paleta oficial de colores de remeras
+const PALETTE = [
+  { hex: "#313231", name: "Carbón"         },
+  { hex: "#131217", name: "Negro Profundo"  },
+  { hex: "#02A267", name: "Verde Esmeralda" },
+  { hex: "#DEDFDC", name: "Hueso"           },
+  { hex: "#131313", name: "Negro"           },
+  { hex: "#544434", name: "Marrón"          },
+  { hex: "#22242A", name: "Gris Oscuro"     },
+  { hex: "#0486D7", name: "Azul Neon"       },
+  { hex: "#232323", name: "Grafito"         },
+  { hex: "#1C3455", name: "Azul Marino"     },
+  { hex: "#F97301", name: "Naranja"         },
+  { hex: "#E8C6A6", name: "Arena"           },
+  { hex: "#7560A0", name: "Violeta"         },
+  { hex: "#FDD107", name: "Amarillo"        },
+];
+
+// Colores claros que necesitan check oscuro
+const LIGHT_COLORS = ["#DEDFDC", "#E8C6A6", "#FDD107"];
+
 const BENEFITS = [
   { icon: "local_shipping", label: "Envío gratis", desc: "En compras +$30.000" },
   { icon: "verified",       label: "Calidad garantizada", desc: "Devolución en 30 días" },
@@ -187,29 +208,31 @@ export default function Producto() {
                   Color{selectedColor ? `: ${selectedColor}` : ""}
                 </p>
                 <div className="flex gap-2 flex-wrap">
-                  {product.colors.map(color => {
-                    const colorMap = {
-                      "Negro": "#111", "Blanco": "#fff", "Gris": "#888",
-                      "Cyan": "#00f2ff", "Purple": "#ecb2ff", "Navy": "#1a2744", "Cream": "#f5f0e8"
-                    };
-                    return (
-                      <button key={color} onClick={() => setSelectedColor(color)}
-                        title={color}
-                        className={`w-9 h-9 rounded-full border-2 transition-all duration-150
-                                    hover:scale-110 flex items-center justify-center ${
-                          selectedColor === color ? "border-primary scale-110" : "border-white/20"
-                        }`}
-                        style={{ backgroundColor: colorMap[color] || "#333" }}
-                      >
-                        {selectedColor === color && (
+                  {PALETTE.map(c => (
+                    <button key={c.hex} onClick={() => setSelectedColor(c.name)}
+                      title={c.name}
+                      className={`w-9 h-9 rounded-full border-2 transition-all duration-150
+                                  hover:scale-110 relative group ${
+                        selectedColor === c.name ? "border-primary scale-110" : "border-white/20"
+                      }`}
+                      style={{ backgroundColor: c.hex }}
+                    >
+                      {selectedColor === c.name && (
+                        <span className="absolute inset-0 flex items-center justify-center">
                           <span className="material-symbols-outlined text-[14px]"
-                                style={{ color: color === "Blanco" || color === "Cream" ? "#000" : "#fff" }}>
+                                style={{ color: LIGHT_COLORS.includes(c.hex) ? "#000" : "#fff" }}>
                             check
                           </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                        </span>
+                      )}
+                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px]
+                                       font-bold text-white bg-zinc-900 px-1.5 py-0.5 rounded
+                                       opacity-0 group-hover:opacity-100 transition-opacity
+                                       whitespace-nowrap pointer-events-none z-10">
+                        {c.name}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

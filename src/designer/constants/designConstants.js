@@ -23,10 +23,20 @@ export const DEFAULT_TEXT_CONFIG = {
 };
 
 export const TSHIRT_COLOR_CODES = [
-  "#FFFFFF", "#000000", "#1a1a1a", "#808080",
-  "#00f2ff", "#ecb2ff", "#bdec00",
-  "#FF0000", "#0000FF", "#00FF00",
-  "#FFFF00", "#FF6600", "#8B4513",
+  { hex: "#313231", name: "Carbón"        },
+  { hex: "#131217", name: "Negro Profundo" },
+  { hex: "#02A267", name: "Verde Esmeralda"},
+  { hex: "#DEDFDC", name: "Hueso"         },
+  { hex: "#131313", name: "Negro"         },
+  { hex: "#544434", name: "Marrón"        },
+  { hex: "#22242A", name: "Gris Oscuro"   },
+  { hex: "#0486D7", name: "Azul Neon"     },
+  { hex: "#232323", name: "Grafito"       },
+  { hex: "#1C3455", name: "Azul Marino"   },
+  { hex: "#F97301", name: "Naranja"       },
+  { hex: "#E8C6A6", name: "Arena"         },
+  { hex: "#7560A0", name: "Violeta"       },
+  { hex: "#FDD107", name: "Amarillo"      },
 ];
 
 export const FONT_OPTIONS = [
