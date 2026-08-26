@@ -82,7 +82,6 @@ export default function Navbar() {
           <span className="material-symbols-outlined text-[14px]">design_services</span>
           Studio
         </Link>
-
         {/* Acciones derecha */}
         <div className="flex items-center gap-1">
 
@@ -173,6 +172,14 @@ export default function Navbar() {
                         Mis órdenes
                       </Link>
                       <Link
+                        to="/galeria"
+                        className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold
+                                   text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-tertiary">photo_library</span>
+                        Galería
+                      </Link>
+                      <Link
                         to="/catalogo"
                         className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold
                                    text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
@@ -223,6 +230,7 @@ export default function Navbar() {
       >
         <BottomNavItem to="/"          icon="storefront"        label="Tienda"   active={location.pathname === "/"} />
         <BottomNavItem to="/catalogo"  icon="auto_awesome"      label="Catálogo" active={location.pathname === "/catalogo"} />
+        <BottomNavItem to="/galeria"   icon="photo_library"     label="Galería"  active={location.pathname === "/galeria"} />
         <BottomNavItem to="/disenar"   icon="design_services"   label="Studio"   active={location.pathname === "/disenar"} />
 
         {/* Carrito — botón especial */}

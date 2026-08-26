@@ -11,6 +11,7 @@ import Catalogo            from "./pages/Catalogo";
 import Login               from "./pages/Login";
 import Register            from "./pages/Register";
 import Perfil              from "./pages/Perfil";
+import Galeria             from "./pages/Galeria";
 
 // Lazy: carga el diseñador solo cuando el usuario navega a /disenar
 // Evita que Three.js + Fabric.js inflen el bundle principal
@@ -42,6 +43,7 @@ export default function App() {
             {/* Públicas */}
             <Route path="/"         element={<Home />} />
             <Route path="/catalogo" element={<Catalogo />} />
+            <Route path="/galeria"  element={<Galeria />} />
             <Route path="/login"    element={<Login />} />
             <Route path="/register" element={<Register />} />
 
