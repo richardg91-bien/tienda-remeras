@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+// NEON-STITCH v1.1
 import { lazy, Suspense } from "react";
 import { CartProvider }    from "./context/CartContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
