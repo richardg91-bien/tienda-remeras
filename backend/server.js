@@ -1,5 +1,9 @@
-import dotenv       from "dotenv";
-dotenv.config();
+import dotenv from "dotenv";
+// En produccion (Railway) las variables ya estan inyectadas
+// En desarrollo carga el .env local
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 import express      from "express";
 import cors         from "cors";
