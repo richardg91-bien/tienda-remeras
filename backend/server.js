@@ -20,7 +20,19 @@ const PORT = process.env.PORT || 3000;
 // ── Middlewares globales ──────────────────────────────────
 
 app.use(cors({
-  origin:      process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: (origin, callback) => {
+    const allowed = [
+      process.env.FRONTEND_URL,
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ].filter(Boolean);
+    // Permite requests sin origin (Postman, Railway health checks)
+    if (!origin || allowed.some(o => origin.startsWith(o))) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS bloqueado: ${origin}`));
+    }
+  },
   credentials: true,
 }));
 
