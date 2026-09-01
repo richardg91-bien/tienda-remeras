@@ -62,7 +62,7 @@ export default function Cart() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={closeCart}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[54]"
             aria-hidden
           />
         )}
@@ -77,10 +77,10 @@ export default function Cart() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
-            className="fixed top-0 right-0 z-50 w-full max-w-md
+            className="fixed top-0 right-0 z-[55] w-full max-w-md
                        bg-background border-l border-white/8 flex flex-col
                        shadow-[-8px_0_60px_rgba(0,0,0,0.8)]"
-            style={{ height: "calc(100vh - env(safe-area-inset-bottom, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            style={{ height: "100dvh" }}
             role="dialog"
             aria-label="Carrito de compras"
           >
