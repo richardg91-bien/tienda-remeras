@@ -1,3 +1,22 @@
+// Polyfill WebSocket para Node.js < 22 (Railway usa Node 20)
+// Debe ir ANTES de cualquier import de @supabase
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = class FakeWebSocket {
+    constructor(url) {
+      this.url = url;
+      this.readyState = 3; // CLOSED
+      this.CONNECTING = 0;
+      this.OPEN = 1;
+      this.CLOSING = 2;
+      this.CLOSED = 3;
+    }
+    close() {}
+    send() {}
+    addEventListener() {}
+    removeEventListener() {}
+  };
+}
+
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL     = process.env.SUPABASE_URL;
@@ -8,35 +27,13 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE) {
   process.exit(1);
 }
 
-/**
- * Cliente con service_role key — bypasea RLS.
- * Realtime deshabilitado — no se usa en este backend
- * y requiere WebSocket nativo (Node 22+).
- */
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE, {
   auth: {
     autoRefreshToken:   false,
     persistSession:     false,
     detectSessionInUrl: false,
   },
-  // Deshabilita completamente el cliente Realtime
-  // Evita el error "native WebSocket not found" en Node 20
-  realtime: {
-    params: { eventsPerSecond: -1 },
-  },
-  global: {
-    headers: { "x-application-name": "neon-stitch-api" },
-  },
 });
-
-// Parcha el WebSocket para evitar el error en Node 20
-if (typeof globalThis.WebSocket === "undefined") {
-  globalThis.WebSocket = class FakeWS {
-    constructor() { this.readyState = 3; }
-    close() {}
-    send() {}
-  };
-}
 
 // Verifica la conexión al iniciar
 supabase
