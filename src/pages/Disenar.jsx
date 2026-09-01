@@ -100,10 +100,19 @@ function DesignerContent() {
             </p>
           </div>
 
-          {/* Canvas 2D */}
+          {/* Canvas 2D — siempre montados ambos, solo uno visible */}
           <div className="flex flex-col items-center justify-center gap-3 p-4 flex-shrink-0">
-            <div className="glass-panel rounded-3xl overflow-hidden border border-white/8">
-              <TshirtCanvas svgPath={svgPath} view={selectedView} />
+            {/* Frente — siempre montado */}
+            <div className={selectedView === "front" ? "block" : "hidden"}>
+              <div className="glass-panel rounded-3xl overflow-hidden border border-white/8">
+                <TshirtCanvas svgPath={TSHIRT_TYPES[selectedType]?.frontPath || TSHIRT_TYPES["crew-neck"].frontPath} view="front" />
+              </div>
+            </div>
+            {/* Dorso — siempre montado */}
+            <div className={selectedView === "back" ? "block" : "hidden"}>
+              <div className="glass-panel rounded-3xl overflow-hidden border border-white/8">
+                <TshirtCanvas svgPath={TSHIRT_TYPES[selectedType]?.backPath || TSHIRT_TYPES["crew-neck"].backPath} view="back" />
+              </div>
             </div>
             <p className="text-[11px] text-gray-600 flex items-center gap-1">
               <span className="material-symbols-outlined text-[13px]">edit</span>
@@ -177,10 +186,13 @@ function DesignerContent() {
 
         {/* Canvas 2D + 3D siempre montados para mantener sincronización */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Canvas 2D */}
+          {/* Canvas 2D — ambos siempre montados, solo uno visible */}
           <div className="flex-1 flex items-center justify-center p-3 min-h-0">
-            <div className="glass-panel rounded-2xl overflow-hidden border border-white/8 h-full flex items-center justify-center">
-              <TshirtCanvas svgPath={svgPath} view={selectedView} />
+            <div className={`glass-panel rounded-2xl overflow-hidden border border-white/8 h-full flex items-center justify-center ${selectedView === "front" ? "block" : "hidden"}`}>
+              <TshirtCanvas svgPath={TSHIRT_TYPES[selectedType]?.frontPath || TSHIRT_TYPES["crew-neck"].frontPath} view="front" />
+            </div>
+            <div className={`glass-panel rounded-2xl overflow-hidden border border-white/8 h-full flex items-center justify-center ${selectedView === "back" ? "block" : "hidden"}`}>
+              <TshirtCanvas svgPath={TSHIRT_TYPES[selectedType]?.backPath || TSHIRT_TYPES["crew-neck"].backPath} view="back" />
             </div>
           </div>
 
