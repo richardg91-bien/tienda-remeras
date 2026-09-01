@@ -58,34 +58,47 @@ export default function StudioOnboarding() {
     <AnimatePresence>
       {visible && (
         <>
-          {/* Overlay */}
+          {/* Overlay — click para cerrar */}
           <motion.div
             key="overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            onClick={handleClose}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
           />
 
-          {/* Modal */}
+          {/* Modal — centrado siempre */}
           <motion.div
             key="modal"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.88, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            exit={{ opacity: 0, scale: 0.88, y: 16 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 bottom-8 md:inset-auto md:left-1/2 md:top-1/2
-                       md:-translate-x-1/2 md:-translate-y-1/2 md:w-[420px]
-                       bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden z-[61]
-                       shadow-[0_24px_80px_rgba(0,0,0,0.8)]"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                       w-[calc(100vw-32px)] max-w-[400px]
+                       bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden
+                       z-[61] shadow-[0_24px_80px_rgba(0,0,0,0.9)]"
           >
-            {/* Barra de progreso */}
-            <div className="flex gap-1 p-4 pb-0">
-              {STEPS.map((_, i) => (
-                <div key={i} className={`flex-1 h-1 rounded-full transition-all duration-300 ${
-                  i <= step ? "bg-primary" : "bg-white/10"
-                }`} />
-              ))}
+            {/* Header con botón cerrar */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-0">
+              {/* Barra de progreso */}
+              <div className="flex gap-1.5 flex-1 mr-4">
+                {STEPS.map((_, i) => (
+                  <div key={i} className={`flex-1 h-1 rounded-full transition-all duration-300 ${
+                    i <= step ? "bg-primary" : "bg-white/10"
+                  }`} />
+                ))}
+              </div>
+              {/* Botón X siempre visible */}
+              <button
+                onClick={handleClose}
+                aria-label="Cerrar"
+                className="w-7 h-7 rounded-full glass-panel flex items-center justify-center
+                           text-gray-500 hover:text-white transition-colors flex-shrink-0"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
             </div>
 
             {/* Contenido */}
@@ -99,8 +112,8 @@ export default function StudioOnboarding() {
                 className="p-6"
               >
                 {/* Ícono */}
-                <div className="w-14 h-14 rounded-2xl glass-panel flex items-center justify-center mb-4">
-                  <span className={`material-symbols-outlined text-[28px] ${STEPS[step].color}`}>
+                <div className="w-12 h-12 rounded-2xl glass-panel flex items-center justify-center mb-4">
+                  <span className={`material-symbols-outlined text-[24px] ${STEPS[step].color}`}>
                     {STEPS[step].icon}
                   </span>
                 </div>
@@ -111,7 +124,7 @@ export default function StudioOnboarding() {
                 </p>
 
                 {/* Título */}
-                <h3 className="font-black text-2xl mb-2">{STEPS[step].title}</h3>
+                <h3 className="font-black text-xl mb-2">{STEPS[step].title}</h3>
 
                 {/* Descripción */}
                 <p className="text-gray-400 text-sm leading-relaxed mb-4">{STEPS[step].desc}</p>
@@ -125,17 +138,16 @@ export default function StudioOnboarding() {
             </AnimatePresence>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-6 pb-6 pt-2">
+            <div className="flex items-center justify-between px-6 pb-5 pt-1">
               <button onClick={handleClose}
-                className="text-xs text-gray-600 hover:text-white transition-colors font-bold">
-                Saltar tour
+                className="text-xs text-gray-600 hover:text-white transition-colors font-bold uppercase tracking-wider">
+                Saltar
               </button>
-              <button onClick={handleNext}
-                className="btn-primary text-xs py-2.5 px-6">
+              <button onClick={handleNext} className="btn-primary text-xs py-2.5 px-5">
                 {step < STEPS.length - 1 ? (
-                  <>Siguiente <span className="material-symbols-outlined text-[16px]">arrow_forward</span></>
+                  <>Siguiente <span className="material-symbols-outlined text-[15px]">arrow_forward</span></>
                 ) : (
-                  <>¡Empezar! <span className="material-symbols-outlined text-[16px]">design_services</span></>
+                  <>¡Empezar! <span className="material-symbols-outlined text-[15px]">design_services</span></>
                 )}
               </button>
             </div>
