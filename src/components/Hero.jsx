@@ -96,13 +96,13 @@ export default function Hero() {
 
             {/* CTAs */}
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mt-10">
-              <Link to="/disenar" className="btn-primary text-sm px-8 py-4">
-                <span className="material-symbols-outlined text-[20px]">design_services</span>
-                Diseñar ahora
+              <Link to="/register" className="btn-primary text-sm px-8 py-4">
+                <span className="material-symbols-outlined text-[20px]">person_add</span>
+                Empezar gratis
               </Link>
-              <Link to="/catalogo" className="btn-outline text-sm px-8 py-4">
-                <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-                Ver colección
+              <Link to="/login" className="btn-outline text-sm px-8 py-4">
+                <span className="material-symbols-outlined text-[20px]">login</span>
+                Ya tengo cuenta
               </Link>
             </motion.div>
 

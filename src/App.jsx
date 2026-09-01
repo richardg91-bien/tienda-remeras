@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { CartProvider }    from "./context/CartContext";
-import { AuthProvider }    from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar              from "./components/Navbar";
 import Cart                from "./components/Cart";
 import AIAssistant         from "./components/AIAssistant";
@@ -14,8 +14,6 @@ import Perfil              from "./pages/Perfil";
 import Galeria             from "./pages/Galeria";
 import Producto            from "./pages/Producto";
 
-// Lazy: carga el diseñador solo cuando el usuario navega a /disenar
-// Evita que Three.js + Fabric.js inflen el bundle principal
 const Disenar = lazy(() => import("./pages/Disenar.jsx"));
 
 function DesignerFallback() {
@@ -31,6 +29,18 @@ function DesignerFallback() {
   );
 }
 
+// Carrito y asistente IA solo para usuarios autenticados
+function AuthenticatedGlobals() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return null;
+  return (
+    <>
+      <Cart />
+      <AIAssistant />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -41,30 +51,25 @@ export default function App() {
           <Navbar />
 
           <Routes>
-            {/* Públicas */}
+            {/* Públicas — solo Home, Login y Register sin autenticación */}
             <Route path="/"         element={<Home />} />
-            <Route path="/catalogo"      element={<Catalogo />} />
-            <Route path="/galeria"        element={<Galeria />} />
-            <Route path="/producto/:id"   element={<Producto />} />
             <Route path="/login"    element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Design Studio — carga lazy para no inflar el bundle */}
+            {/* Protegidas — requieren registro */}
+            <Route path="/catalogo"    element={<ProtectedRoute><Catalogo /></ProtectedRoute>} />
+            <Route path="/galeria"     element={<ProtectedRoute><Galeria /></ProtectedRoute>} />
+            <Route path="/producto/:id" element={<ProtectedRoute><Producto /></ProtectedRoute>} />
+            <Route path="/perfil"      element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
+
+            {/* Design Studio — protegido + lazy */}
             <Route
               path="/disenar"
               element={
-                <Suspense fallback={<DesignerFallback />}>
-                  <Disenar />
-                </Suspense>
-              }
-            />
-
-            {/* Protegidas */}
-            <Route
-              path="/perfil"
-              element={
                 <ProtectedRoute>
-                  <Perfil />
+                  <Suspense fallback={<DesignerFallback />}>
+                    <Disenar />
+                  </Suspense>
                 </ProtectedRoute>
               }
             />
@@ -73,9 +78,8 @@ export default function App() {
             <Route path="*" element={<Home />} />
           </Routes>
 
-          {/* Globales */}
-          <Cart />
-          <AIAssistant />
+          {/* Globales — solo visibles si está autenticado */}
+          <AuthenticatedGlobals />
 
         </CartProvider>
       </AuthProvider>

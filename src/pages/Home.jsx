@@ -6,6 +6,7 @@ import Hero from "../components/Hero";
 import Products from "../components/Products";
 import StyleQuiz from "../components/StyleQuiz";
 import AIAssistant from "../components/AIAssistant";
+import { useAuth } from "../context/AuthContext";
 import { products, formatPrice } from "../data/products";
 
 const fadeUp = {
@@ -77,7 +78,11 @@ const testimonials = [
 
 export default function Home() {
   const [showQuiz, setShowQuiz] = useState(false);
+  const { isAuthenticated }     = useAuth();
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
+
+  // Si está autenticado va al catálogo, si no va a registro
+  const ctaLink = isAuthenticated ? "/catalogo" : "/register";
 
   return (
     <div className="bg-background text-white min-h-screen">
@@ -147,7 +152,7 @@ export default function Home() {
             </motion.h2>
           </div>
           <motion.div variants={fadeUp}>
-            <Link to="/catalogo" className="btn-outline py-2.5 px-5 text-xs hidden md:inline-flex">
+            <Link to={ctaLink} className="btn-outline py-2.5 px-5 text-xs hidden md:inline-flex">
               Ver todo
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Link>
@@ -157,7 +162,7 @@ export default function Home() {
         <Products products={bestSellers} title="" />
 
         <div className="mt-8 text-center md:hidden">
-          <Link to="/catalogo" className="btn-outline py-2.5 px-6 text-xs">
+          <Link to={ctaLink} className="btn-outline py-2.5 px-6 text-xs">
             Ver catálogo completo
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </Link>
@@ -200,7 +205,7 @@ export default function Home() {
                 <span className="material-symbols-outlined text-[18px]">psychology</span>
                 Iniciar Quiz IA
               </button>
-              <Link to="/catalogo" className="btn-outline">
+              <Link to={ctaLink} className="btn-outline">
                 Ver Catálogo
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </Link>
