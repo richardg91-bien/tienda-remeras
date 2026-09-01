@@ -209,7 +209,8 @@ export default function Cart() {
             initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
             transition={{ duration:0.2 }}
             onClick={closeCart}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[54]"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+            style={{ zIndex: 9998 }}
             aria-hidden />
         )}
       </AnimatePresence>
@@ -220,9 +221,10 @@ export default function Cart() {
           <motion.aside key="cart-desktop"
             initial={{ x:"100%" }} animate={{ x:0 }} exit={{ x:"100%" }}
             transition={{ type:"spring", damping:28, stiffness:280 }}
-            className="hidden md:flex fixed top-0 right-0 z-[55] w-full max-w-md
+            className="hidden md:flex fixed top-0 right-0 w-full max-w-md
                        bg-background border-l border-white/8 flex-col h-full
                        shadow-[-8px_0_60px_rgba(0,0,0,0.8)]"
+            style={{ zIndex: 9999 }}
             role="dialog" aria-label="Carrito de compras"
           >
             <CartContent />
@@ -246,10 +248,10 @@ export default function Cart() {
             onDragEnd={(_, info) => {
               if (info.offset.y > 100) closeCart();
             }}
-            className="md:hidden fixed bottom-0 left-0 right-0 z-[55]
+            className="md:hidden fixed bottom-0 left-0 right-0
                        bg-background border-t border-white/10 rounded-t-3xl
                        flex flex-col shadow-[0_-8px_40px_rgba(0,0,0,0.7)]"
-            style={{ maxHeight:"90dvh" }}
+            style={{ maxHeight:"90dvh", zIndex: 9999 }}
             role="dialog" aria-label="Carrito de compras"
           >
             {/* Handle arrastrable */}

@@ -18,9 +18,13 @@ const CATEGORIES = [
   { value: "general",     label: "General",     icon: "category",      color: "text-gray-400", desc: "Varios" },
 ];
 
-export default function AssetLibrary({ manualSync, frontCanvas, backCanvas, selectedView }) {
-  // Usa el canvas de la vista activa directamente (no del contexto)
-  const canvasToUse = selectedView === "back" ? backCanvas : frontCanvas;
+export default function AssetLibrary({ manualSync, frontCanvas: frontProp, backCanvas: backProp, selectedView: viewProp }) {
+  // Obtiene los canvas del contexto como fallback si las props son null
+  const { frontCanvas: frontCtx, backCanvas: backCtx } = useCanvas();
+  const frontCanvas = frontProp ?? frontCtx;
+  const backCanvas  = backProp  ?? backCtx;
+  // selectedView desde las props o desde el store directamente
+  const canvasToUse = viewProp === "back" ? backCanvas : (frontCanvas ?? backCanvas);
   const [assets, setAssets]           = useState([]);
   const [counts, setCounts]           = useState({});
   const [loading, setLoading]         = useState(true);
