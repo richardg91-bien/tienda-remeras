@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import * as fabric from "fabric";
@@ -19,12 +19,19 @@ const TABS = [
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-export default function DesignTools({ manualSync, frontCanvas, backCanvas }) {
-  const [activeTab, setActiveTab]     = useState("tools");
+export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDone }) {
+  const [activeTab, setActiveTab]        = useState("tools");
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [selectedSize, setSelectedSize]  = useState(null);
   const [addingToCart, setAddingToCart]  = useState(false);
   const [addedOk, setAddedOk]            = useState(false);
+
+  // Escucha el evento del botón "Agregar" del toolbar mobile
+  useEffect(() => {
+    const handler = () => setShowSizeModal(true);
+    document.addEventListener("studio:addToCart", handler);
+    return () => document.removeEventListener("studio:addToCart", handler);
+  }, []);
 
   const dispatch    = useDispatch();
   const tshirtColor = useSelector((s) => s.designer.tshirtColor);
