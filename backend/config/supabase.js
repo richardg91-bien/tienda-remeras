@@ -10,8 +10,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE) {
 
 /**
  * Cliente con service_role key — bypasea RLS.
- * NUNCA exponer esta key al frontend.
- * Usar solo en el servidor Node.
+ * Realtime deshabilitado — no se usa en este backend
+ * y requiere WebSocket nativo (Node 22+).
  */
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE, {
   auth: {
@@ -19,7 +19,24 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE, {
     persistSession:     false,
     detectSessionInUrl: false,
   },
+  // Deshabilita completamente el cliente Realtime
+  // Evita el error "native WebSocket not found" en Node 20
+  realtime: {
+    params: { eventsPerSecond: -1 },
+  },
+  global: {
+    headers: { "x-application-name": "neon-stitch-api" },
+  },
 });
+
+// Parcha el WebSocket para evitar el error en Node 20
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = class FakeWS {
+    constructor() { this.readyState = 3; }
+    close() {}
+    send() {}
+  };
+}
 
 // Verifica la conexión al iniciar
 supabase

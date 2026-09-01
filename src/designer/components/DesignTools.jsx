@@ -321,14 +321,14 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas }) {
               className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
             />
 
-            {/* Modal */}
+            {/* Modal — siempre centrado */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-x-4 bottom-8 md:inset-auto md:left-1/2 md:top-1/2
-                         md:-translate-x-1/2 md:-translate-y-1/2 md:w-96
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                         w-[calc(100vw-32px)] max-w-sm
                          bg-zinc-950 border border-white/10 rounded-3xl p-6 z-[61]
                          shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
             >
