@@ -81,11 +81,13 @@ export default function StyleQuiz({ onClose }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92 }}
         transition={{ type: "spring", damping: 25, stiffness: 280 }}
-        className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden
-                   shadow-[0_40px_80px_rgba(0,0,0,0.8)]"
+        className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl
+                   shadow-[0_40px_80px_rgba(0,0,0,0.8)]
+                   flex flex-col"
+        style={{ maxHeight: "calc(100vh - 120px)" }}
       >
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-zinc-800/60">
+        {/* Header — fijo arriba */}
+        <div className="px-6 pt-6 pb-4 border-b border-zinc-800/60 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <span className="text-xl">🎯</span>
@@ -95,9 +97,7 @@ export default function StyleQuiz({ onClose }) {
               onClick={onClose}
               className="text-zinc-500 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
           </div>
 
@@ -105,7 +105,7 @@ export default function StyleQuiz({ onClose }) {
           {!results && (
             <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-green-500 rounded-full"
+                className="h-full bg-primary rounded-full"
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.4 }}
               />
@@ -113,8 +113,8 @@ export default function StyleQuiz({ onClose }) {
           )}
         </div>
 
-        {/* Contenido */}
-        <div className="px-6 py-6">
+        {/* Contenido — con scroll si no entra */}
+        <div className="px-6 py-6 overflow-y-auto flex-1">
           <AnimatePresence mode="wait">
             {!results ? (
               /* Pregunta actual */
