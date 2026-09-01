@@ -15,10 +15,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE) {
  */
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE, {
   auth: {
-    // Desactiva la persistencia de sesión de Supabase Auth
-    // porque usamos JWT propio
-    autoRefreshToken:  false,
-    persistSession:    false,
+    autoRefreshToken:   false,
+    persistSession:     false,
     detectSessionInUrl: false,
   },
 });
