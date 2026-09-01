@@ -19,8 +19,8 @@ const TABS = [
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDone }) {
-  const [activeTab, setActiveTab]        = useState("tools");
+export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDone, initialTab }) {
+  const [activeTab, setActiveTab]        = useState(initialTab === "library" ? "library" : "tools");
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [selectedSize, setSelectedSize]  = useState(null);
   const [addingToCart, setAddingToCart]  = useState(false);

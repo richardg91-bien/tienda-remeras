@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useState, useRef } from "react";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { Canvas } from "@react-three/fiber";
 import { Environment, OrbitControls, Loader } from "@react-three/drei";
@@ -21,12 +21,9 @@ function DesignerContent() {
   const selectedType = useSelector((s) => s.designer.selectedType);
   const { frontCanvas, backCanvas } = useCanvas();
 
-  // Desktop: sidebar abierto/cerrado
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  // Mobile: bottom sheet abierto/cerrado
-  const [sheetOpen, setSheetOpen]     = useState(false);
-  // Mobile: tab activo (canvas 2D o modelo 3D)
-  const [mobileTab, setMobileTab]     = useState("canvas");
+  const [sidebarOpen, setSidebarOpen] = useState(true);  // desktop
+  const [menuOpen, setMenuOpen]       = useState(false);  // mobile hamburguesa
+  const [menuTab, setMenuTab]         = useState("tools"); // tools | library
 
   const { designTextureFront, designTextureBack, manualTriggerSync } =
     useCanvasTextureSync({ frontCanvas, backCanvas, selectedView });
@@ -42,12 +39,10 @@ function DesignerContent() {
   return (
     <div className="bg-background" style={{ height: "calc(100dvh - 64px)" }}>
 
-      {/* ════════════════════════════════════════
-          DESKTOP LAYOUT
-          ════════════════════════════════════════ */}
+      {/* ══════════════ DESKTOP ══════════════ */}
       <div className="hidden md:flex h-full overflow-hidden">
 
-        {/* Sidebar herramientas */}
+        {/* Sidebar */}
         <motion.aside
           animate={{ width: sidebarOpen ? 210 : 0, opacity: sidebarOpen ? 1 : 0 }}
           transition={{ duration: 0.25 }}
@@ -61,14 +56,12 @@ function DesignerContent() {
           </div>
         </motion.aside>
 
-        {/* Área principal desktop */}
         <div className="flex-1 flex flex-col overflow-hidden">
-
           {/* Header desktop */}
           <div className="flex items-center justify-between px-5 py-3
                           border-b border-white/8 bg-surface/40 backdrop-blur-xl flex-shrink-0">
             <div className="flex items-center gap-3">
-              <button onClick={() => setSidebarOpen((v) => !v)}
+              <button onClick={() => setSidebarOpen(v => !v)}
                 className="p-2 rounded-xl text-gray-500 hover:text-primary hover:bg-white/5 transition-colors">
                 <span className="material-symbols-outlined text-[20px]">
                   {sidebarOpen ? "left_panel_close" : "left_panel_open"}
@@ -79,31 +72,28 @@ function DesignerContent() {
                 <p className="text-[10px] text-gray-600">Diseñá tu remera en tiempo real</p>
               </div>
             </div>
-            {/* Toggle frente/dorso */}
             <div className="flex items-center gap-1 glass-panel rounded-full p-1">
-              {["front","back"].map((v) => (
+              {["front","back"].map(v => (
                 <button key={v} onClick={() => handleViewChange(v)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider
-                              transition-all duration-200 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
                     selectedView === v ? "bg-primary text-background" : "text-gray-500 hover:text-white"
                   }`}>
                   {v === "front" ? "Frente" : "Dorso"}
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-gray-600 hidden lg:block">
-              <span className="material-symbols-outlined text-[12px] mr-1">touch_app</span>
+            <p className="text-[10px] text-gray-600 hidden lg:flex items-center gap-1">
+              <span className="material-symbols-outlined text-[12px]">touch_app</span>
               Clic en el 3D para cambiar vista
             </p>
           </div>
 
-          {/* Área de trabajo desktop */}
+          {/* Área trabajo desktop */}
           <div className="flex-1 flex flex-row items-center justify-around gap-6 p-6 overflow-auto">
-            {/* 3D */}
             <div className="relative flex-1 h-[480px] min-w-[280px]">
               <div className="absolute inset-0 rounded-3xl bg-primary/5 blur-[60px] pointer-events-none" />
               <div className="relative h-full glass-panel rounded-3xl overflow-hidden">
-                <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+                <Canvas camera={{ position:[0,0,5], fov:45 }}>
                   <OrbitControls maxPolarAngle={Math.PI/2} minPolarAngle={Math.PI/3} enableZoom={false} autoRotate autoRotateSpeed={0.5} />
                   <Suspense fallback={null}>
                     <TshirtModel tshirtColor={tshirtColor} designTexture={designTextureFront} designTextureBack={designTextureBack} onViewChange={handleViewChange} />
@@ -117,7 +107,6 @@ function DesignerContent() {
                 <span className="material-symbols-outlined text-[13px]">360</span>Arrastrá para rotar
               </p>
             </div>
-            {/* Canvas 2D */}
             <div className="flex flex-col items-center gap-3 flex-shrink-0">
               <div className="glass-panel rounded-3xl overflow-hidden p-2 border border-white/8">
                 <TshirtCanvas svgPath={svgPath} view={selectedView} />
@@ -131,145 +120,171 @@ function DesignerContent() {
         </div>
       </div>
 
-      {/* ════════════════════════════════════════
-          MOBILE LAYOUT
-          ════════════════════════════════════════ */}
-      <div className="flex md:hidden flex-col h-full overflow-hidden">
+      {/* ══════════════ MOBILE ══════════════ */}
+      <div className="flex md:hidden flex-col h-full overflow-hidden relative">
 
-        {/* Header mobile compacto */}
+        {/* Header mobile */}
         <div className="flex items-center justify-between px-4 py-2.5
-                        border-b border-white/8 bg-surface/60 backdrop-blur-xl flex-shrink-0">
+                        border-b border-white/8 bg-surface/60 backdrop-blur-xl flex-shrink-0 z-10">
           <p className="font-black text-sm">Design <span className="text-primary">Studio</span></p>
-
-          {/* Tabs 3D / Canvas */}
-          <div className="flex items-center gap-1 glass-panel rounded-full p-1">
-            <button onClick={() => setMobileTab("canvas")}
-              className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider transition-all ${
-                mobileTab === "canvas" ? "bg-primary text-background" : "text-gray-500"
-              }`}>
-              <span className="material-symbols-outlined text-[14px]">edit</span>
-            </button>
-            <button onClick={() => setMobileTab("3d")}
-              className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider transition-all ${
-                mobileTab === "3d" ? "bg-primary text-background" : "text-gray-500"
-              }`}>
-              <span className="material-symbols-outlined text-[14px]">view_in_ar</span>
-            </button>
-          </div>
 
           {/* Toggle frente/dorso */}
           <div className="flex items-center gap-1 glass-panel rounded-full p-0.5">
-            {["front","back"].map((v) => (
+            {["front","back"].map(v => (
               <button key={v} onClick={() => handleViewChange(v)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase transition-all ${
+                className={`px-3 py-1 rounded-full text-[11px] font-black uppercase transition-all ${
                   selectedView === v ? "bg-primary text-background" : "text-gray-500"
                 }`}>
-                {v === "front" ? "F" : "D"}
+                {v === "front" ? "Frente" : "Dorso"}
               </button>
             ))}
           </div>
+
+          {/* Hamburguesa */}
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className={`p-2 rounded-xl transition-all duration-200 ${
+              menuOpen
+                ? "bg-primary text-background"
+                : "glass-panel text-white border border-white/10"
+            }`}
+            aria-label="Menú herramientas"
+          >
+            <span className="material-symbols-outlined text-[22px]">
+              {menuOpen ? "close" : "tune"}
+            </span>
+          </button>
         </div>
 
-        {/* Área principal mobile */}
-        <div className="flex-1 overflow-hidden relative">
-          <AnimatePresence mode="wait" initial={false}>
-            {mobileTab === "canvas" ? (
-              /* Canvas 2D centrado */
-              <motion.div key="canvas"
-                initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }}
-                exit={{ opacity:0, x:-20 }} transition={{ duration:0.2 }}
-                className="absolute inset-0 flex items-center justify-center p-4"
-              >
-                <div className="glass-panel rounded-2xl overflow-hidden border border-white/8"
-                     style={{ maxWidth: "100%", maxHeight: "100%" }}>
-                  <TshirtCanvas svgPath={svgPath} view={selectedView} />
-                </div>
-              </motion.div>
-            ) : (
-              /* Modelo 3D */
-              <motion.div key="3d"
-                initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }}
-                exit={{ opacity:0, x:-20 }} transition={{ duration:0.2 }}
-                className="absolute inset-0"
-              >
-                <Canvas camera={{ position:[0,0,5], fov:45 }}>
-                  <OrbitControls maxPolarAngle={Math.PI/2} minPolarAngle={Math.PI/3} enableZoom={false} autoRotate autoRotateSpeed={1} />
-                  <Suspense fallback={null}>
-                    <TshirtModel tshirtColor={tshirtColor} designTexture={designTextureFront} designTextureBack={designTextureBack} onViewChange={handleViewChange} />
-                    <Environment preset="sunset" />
-                  </Suspense>
-                </Canvas>
-                <Loader containerStyles={{ position:"absolute", inset:0, background:"rgba(10,10,11,0.85)" }}
-                  dataStyles={{ color:"#00f2ff", fontSize:"12px" }} barStyles={{ backgroundColor:"#00f2ff", height:"2px" }} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Área principal mobile — canvas 2D arriba, 3D abajo */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+
+          {/* Canvas 2D — siempre montado para mantener la sincronización */}
+          <div className={`flex items-center justify-center p-3 transition-all duration-300 ${
+            menuOpen ? "flex-[0.6]" : "flex-[1.2]"
+          }`}>
+            <div className="glass-panel rounded-2xl overflow-hidden border border-white/8 h-full flex items-center justify-center">
+              <TshirtCanvas svgPath={svgPath} view={selectedView} />
+            </div>
+          </div>
+
+          {/* Separador */}
+          <div className="flex items-center justify-center py-1 flex-shrink-0">
+            <div className="flex items-center gap-2 text-[10px] text-gray-700 font-bold uppercase tracking-wider">
+              <div className="w-8 h-px bg-white/10" />
+              <span className="material-symbols-outlined text-[14px]">view_in_ar</span>
+              Vista 3D
+              <div className="w-8 h-px bg-white/10" />
+            </div>
+          </div>
+
+          {/* Modelo 3D — siempre montado */}
+          <div className={`transition-all duration-300 ${
+            menuOpen ? "flex-[0.4]" : "flex-[0.8]"
+          }`}>
+            <Canvas camera={{ position:[0,0,5], fov:50 }}>
+              <OrbitControls maxPolarAngle={Math.PI/2} minPolarAngle={Math.PI/3} enableZoom={false} autoRotate autoRotateSpeed={1.5} />
+              <Suspense fallback={null}>
+                <TshirtModel tshirtColor={tshirtColor} designTexture={designTextureFront} designTextureBack={designTextureBack} onViewChange={handleViewChange} />
+                <Environment preset="sunset" />
+              </Suspense>
+            </Canvas>
+          </div>
         </div>
 
-        {/* Barra inferior mobile con herramientas */}
-        <div className="flex-shrink-0 border-t border-white/8 bg-surface/80 backdrop-blur-xl">
-
-          {/* Bottom sheet expandible */}
-          <AnimatePresence>
-            {sheetOpen && (
+        {/* ── Menú hamburguesa (sheet desde abajo) ── */}
+        <AnimatePresence>
+          {menuOpen && (
+            <>
+              {/* Overlay tenue — no tapa el canvas */}
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
+                key="overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMenuOpen(false)}
+                className="absolute inset-0 bg-black/40 z-20"
+              />
+
+              {/* Sheet */}
+              <motion.div
+                key="sheet"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                className="absolute bottom-0 left-0 right-0 z-30
+                           bg-zinc-950 border-t border-white/10 rounded-t-3xl
+                           shadow-[0_-8px_40px_rgba(0,0,0,0.6)]"
+                style={{ maxHeight: "55vh" }}
               >
-                <div className="px-4 py-4 max-h-[45vh] overflow-y-auto">
+                {/* Handle */}
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-white/20" />
+                </div>
+
+                {/* Tabs herramientas / biblioteca */}
+                <div className="flex gap-2 px-4 pb-3">
+                  <button
+                    onClick={() => setMenuTab("tools")}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black
+                                uppercase tracking-wider transition-all ${
+                      menuTab === "tools"
+                        ? "bg-primary text-background"
+                        : "glass-panel text-gray-400 border border-white/10 hover:text-white"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">build</span>
+                    Herramientas
+                  </button>
+                  <button
+                    onClick={() => setMenuTab("library")}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black
+                                uppercase tracking-wider transition-all ${
+                      menuTab === "library"
+                        ? "bg-secondary text-background"
+                        : "glass-panel text-gray-400 border border-white/10 hover:text-white"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">photo_library</span>
+                    Biblioteca
+                  </button>
+                </div>
+
+                {/* Contenido scrolleable */}
+                <div className="overflow-y-auto px-4 pb-4"
+                     style={{ maxHeight: "calc(55vh - 100px)" }}>
                   <DesignTools
                     manualSync={manualSync}
                     frontCanvas={frontCanvas}
                     backCanvas={backCanvas}
-                    onDone={() => setSheetOpen(false)}
+                    initialTab={menuTab}
+                    onDone={() => setMenuOpen(false)}
                   />
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
+            </>
+          )}
+        </AnimatePresence>
 
-          {/* Toolbar fija */}
-          <div className="flex items-center justify-between px-4 py-3">
-            {/* Botón herramientas */}
-            <button onClick={() => setSheetOpen((v) => !v)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs
-                          uppercase tracking-wider transition-all duration-200 ${
-                sheetOpen
-                  ? "bg-primary text-background"
-                  : "glass-panel text-white border border-white/10"
-              }`}>
-              <span className="material-symbols-outlined text-[18px]">
-                {sheetOpen ? "keyboard_arrow_down" : "tune"}
-              </span>
-              {sheetOpen ? "Cerrar" : "Herramientas"}
-            </button>
-
-            {/* Acciones rápidas: color actual */}
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full border-2 border-primary/50"
-                   style={{ backgroundColor: tshirtColor }} />
-              <span className="text-[10px] text-gray-500 font-bold uppercase">Color</span>
-            </div>
-
-            {/* Botón agregar al carrito */}
+        {/* Botón flotante "Agregar al carrito" */}
+        {!menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10"
+          >
             <button
-              onClick={() => {
-                setSheetOpen(false);
-                // Dispara el modal de talle en DesignTools
-                document.dispatchEvent(new CustomEvent("studio:addToCart"));
-              }}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-black text-xs
-                         uppercase tracking-wider bg-tertiary text-background
-                         transition-all duration-200 active:scale-95"
+              onClick={() => document.dispatchEvent(new CustomEvent("studio:addToCart"))}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm
+                         uppercase tracking-wider bg-primary text-background neon-glow-sm
+                         shadow-[0_8px_24px_rgba(0,242,255,0.3)] active:scale-95 transition-all"
             >
-              <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
-              Agregar
+              <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+              Agregar al carrito
             </button>
-          </div>
-        </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
