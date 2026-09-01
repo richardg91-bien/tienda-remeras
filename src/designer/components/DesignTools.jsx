@@ -281,7 +281,7 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDon
         {/* ── Pestaña: Biblioteca ── */}
         {activeTab === "library" && (
           <div className="flex-1 overflow-hidden">
-            <AssetLibrary manualSync={manualSync} />
+            <AssetLibrary manualSync={manualSync} targetCanvas={activeCanvas} />
           </div>
         )}
 
