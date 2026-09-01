@@ -77,9 +77,10 @@ export default function Cart() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md z-50
+            className="fixed top-0 right-0 z-50 w-full max-w-md
                        bg-background border-l border-white/8 flex flex-col
                        shadow-[-8px_0_60px_rgba(0,0,0,0.8)]"
+            style={{ height: "calc(100vh - env(safe-area-inset-bottom, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
             role="dialog"
             aria-label="Carrito de compras"
           >
@@ -244,7 +245,10 @@ export default function Cart() {
 
             {/* Footer con total y botones */}
             {items.length > 0 && (
-              <div className="border-t border-white/8 px-5 py-5 space-y-3 bg-surface/40 backdrop-blur-xl">
+              <div className="border-t border-white/8 px-5 pt-4 pb-6 space-y-3
+                              bg-surface/40 backdrop-blur-xl flex-shrink-0
+                              md:pb-5">
+                {/* En mobile agrega espacio para no quedar tapado por el bottom nav */}
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-gray-500 text-sm font-bold uppercase tracking-wider">Total</span>
                   <span className="text-2xl font-black text-primary">{formatPrice(totalPrice)}</span>
