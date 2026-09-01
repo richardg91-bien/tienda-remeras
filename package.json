@@ -8,8 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "cd backend && node server.js",
-    "start": "cd backend && npm install && node server.js"
+    "server": "cd backend && node server.js"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
