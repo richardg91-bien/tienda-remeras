@@ -18,7 +18,9 @@ const CATEGORIES = [
   { value: "general",     label: "General",     icon: "category",      color: "text-gray-400", desc: "Varios" },
 ];
 
-export default function AssetLibrary({ manualSync }) {
+export default function AssetLibrary({ manualSync, frontCanvas, backCanvas, selectedView }) {
+  // Usa el canvas de la vista activa directamente (no del contexto)
+  const canvasToUse = selectedView === "back" ? backCanvas : frontCanvas;
   const [assets, setAssets]           = useState([]);
   const [counts, setCounts]           = useState({});
   const [loading, setLoading]         = useState(true);
@@ -30,8 +32,6 @@ export default function AssetLibrary({ manualSync }) {
   const [totalPages, setTotalPages]   = useState(1);
   const [totalItems, setTotalItems]   = useState(0);
   const [view, setView]               = useState("menu"); // "menu" | "grid"
-
-  const { activeCanvas } = useCanvas();
 
   // ── Carga contadores por categoría ───────────────────
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function AssetLibrary({ manualSync }) {
 
   // ── Agrega imagen al canvas ───────────────────────────
   const addToCanvas = async (asset) => {
-    if (!activeCanvas || adding) return;
+    if (!canvasToUse || adding) return;
     setAdding(asset.id);
     try {
       const img = await fabric.Image.fromURL(asset.url, { crossOrigin: "anonymous" });
@@ -93,12 +93,12 @@ export default function AssetLibrary({ manualSync }) {
       const scale = Math.min(maxW / img.width, maxH / img.height);
       img.scale(scale);
       img.set({
-        left: (activeCanvas.width  - img.getScaledWidth())  / 2,
-        top:  (activeCanvas.height - img.getScaledHeight()) / 2,
+        left: (canvasToUse.width  - img.getScaledWidth())  / 2,
+        top:  (canvasToUse.height - img.getScaledHeight()) / 2,
       });
-      activeCanvas.add(img);
-      activeCanvas.setActiveObject(img);
-      activeCanvas.renderAll();
+      canvasToUse.add(img);
+      canvasToUse.setActiveObject(img);
+      canvasToUse.renderAll();
       // Pequeño delay para que Fabric termine de renderizar antes de sincronizar
       await new Promise(r => setTimeout(r, 60));
       manualSync?.();
