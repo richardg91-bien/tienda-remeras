@@ -99,6 +99,8 @@ export default function AssetLibrary({ manualSync }) {
       activeCanvas.add(img);
       activeCanvas.setActiveObject(img);
       activeCanvas.renderAll();
+      // Pequeño delay para que Fabric termine de renderizar antes de sincronizar
+      await new Promise(r => setTimeout(r, 60));
       manualSync?.();
     } catch {
       setError("No se pudo cargar la imagen.");

@@ -129,7 +129,8 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDon
     activeCanvas.clear();
     canvasStorageManager.clearCanvasStorage("all");
     activeCanvas.renderAll();
-    manualSync?.();
+    // Sincroniza el 3D con el canvas vacío
+    setTimeout(() => manualSync?.(), 60);
   };
 
   const updateText = (key, value) => {
