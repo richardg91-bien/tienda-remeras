@@ -1,9 +1,10 @@
-import { Suspense } from "react";
+import { lazy, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, Float } from "@react-three/drei";
-import { TshirtModel } from "./designer/TshirtModel3D.jsx";
+
+// Three.js + R3F + el modelo GLB viven en este chunk:
+// solo se descargan cuando el hero entra en pantalla.
+const Hero3D = lazy(() => import("./Hero3D.jsx"));
 
 const stagger = {
   hidden: {},
@@ -18,16 +19,34 @@ const fadeIn = {
   show:   { opacity: 1, transition: { duration: 0.5 } },
 };
 
-// Modelo 3D simple para el hero (sin el sistema completo del Studio)
-function HeroTshirt() {
+/**
+ * Escena 3D del hero — se monta solo cuando es visible en pantalla,
+ * para no bloquear el primer render con Three.js.
+ */
+function Hero3DOnVisible() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <Float speed={1.5} rotationIntensity={0.4} floatIntensity={0.6}>
-      <TshirtModel
-        tshirtColor="#111111"
-        designTexture={null}
-        designTextureBack={null}
-      />
-    </Float>
+    <div ref={ref} className="absolute inset-0">
+      {visible && <Hero3D />}
+    </div>
   );
 }
 
@@ -139,23 +158,7 @@ export default function Hero() {
             <div className="absolute inset-0 rounded-full bg-primary/10 blur-[80px] scale-75
                             pointer-events-none animate-glow-pulse-cyan" />
 
-            <Canvas camera={{ position: [0, 0, 5], fov: 45 }} className="rounded-3xl">
-              <ambientLight intensity={0.5} />
-              <directionalLight position={[5, 5, 5]} intensity={1} />
-              <pointLight position={[-5, -5, -5]} color="#00f2ff" intensity={0.5} />
-              <Suspense fallback={null}>
-                <HeroTshirt />
-                <Environment preset="night" />
-              </Suspense>
-              <OrbitControls
-                enableZoom={false}
-                enablePan={false}
-                autoRotate
-                autoRotateSpeed={2}
-                minPolarAngle={Math.PI / 3}
-                maxPolarAngle={Math.PI / 1.8}
-              />
-            </Canvas>
+            <Hero3DOnVisible />
 
             {/* Label flotante */}
             <motion.div

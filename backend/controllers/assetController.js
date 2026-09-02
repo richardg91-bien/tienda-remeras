@@ -139,7 +139,7 @@ export const getAssetById = async (req, res) => {
     if (!asset) return res.status(404).json({ message: "Imagen no encontrada." });
 
     return res.json({ asset });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ message: "Error obteniendo imagen." });
   }
 };
@@ -204,7 +204,7 @@ export const getCategories = async (req, res) => {
     ].map((c) => ({ ...c, count: counts[c.value] || 0 }));
 
     return res.json({ categories });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ message: "Error obteniendo categorías." });
   }
 };

@@ -4,7 +4,6 @@
  */
 import { Center, useGLTF } from "@react-three/drei";
 import { useEffect, useRef } from "react";
-import * as THREE from "three";
 
 export function TshirtModel({ tshirtColor = "#111111" }) {
   const { nodes, materials } = useGLTF("/3Dmodels/02.glb");

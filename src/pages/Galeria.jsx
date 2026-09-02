@@ -61,8 +61,8 @@ export default function Galeria() {
     finally { setLoading(false); }
   }, [category, search, page]);
 
-  useEffect(() => { fetchAssets(); }, [fetchAssets]);
-  useEffect(() => { setPage(1); }, [category, search]);
+  useEffect(() => { fetchAssets(); }, [fetchAssets]); // eslint-disable-line react-hooks/set-state-in-effect
+  useEffect(() => { setPage(1); }, [category, search]); // eslint-disable-line react-hooks/set-state-in-effect
 
   const activeCat = CATEGORIES.find(c => c.value === category) || CATEGORIES[0];
 

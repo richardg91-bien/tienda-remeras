@@ -1,7 +1,44 @@
-import { MercadoPagoConfig, Preference, Payment } from "mercadopago";
+import { MercadoPagoConfig, Preference, Payment, MerchantOrder } from "mercadopago";
+import crypto from "crypto";
 import supabase from "../config/supabase.js";
 
 const client = new MercadoPagoConfig({ accessToken: process.env.MP_TOKEN });
+
+// ── Validación de firma del webhook (docs MercadoPago) ───────────────────────
+// https://www.mercadopago.com.ar/developers/es/docs/your-integrations/notifications/webhooks
+const validateWebhookSignature = (req) => {
+  const secret = process.env.MP_WEBHOOK_SECRET;
+  if (!secret) {
+    // Sin secret configurado no hay forma de validar; en producción esto debe existir.
+    console.warn("webhook: MP_WEBHOOK_SECRET no configurado, se saltea la validación de firma.");
+    return true;
+  }
+
+  const signature = req.headers["x-signature"];
+  const requestId = req.headers["x-request-id"];
+  if (!signature || !requestId) return false;
+
+  // x-signature: ts=<timestamp>,v1=<hash>
+  const parts = Object.fromEntries(
+    signature.split(",").map((p) => {
+      const idx = p.indexOf(":");
+      return [p.slice(0, idx).trim(), p.slice(idx + 1).trim()];
+    })
+  );
+  const ts = parts.ts;
+  const hash = parts.v1;
+  if (!ts || !hash) return false;
+
+  // dataID: query param ?data.id o del body
+  const dataId = req.query["data.id"] || req.body?.data?.id;
+  if (!dataId) return false;
+
+  // Orden exigida por la doc: dataID -> requestID -> ts -> DELIMITER -> secret
+  const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+  const computed = crypto.createHmac("sha256", secret).update(manifest).digest("hex");
+
+  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(hash));
+};
 
 // ── POST /api/payments/create_preference ─────────────────────────────────────
 export const createPreference = async (req, res) => {
@@ -94,6 +131,12 @@ export const createPreference = async (req, res) => {
 // ── POST /api/payments/webhook ────────────────────────────────────────────────
 export const webhook = async (req, res) => {
   try {
+    // Rechaza notificaciones sin firma válida de MercadoPago
+    if (!validateWebhookSignature(req)) {
+      console.warn("webhook: firma x-signature inválida o ausente, notificación rechazada.");
+      return res.sendStatus(401);
+    }
+
     const { type, data } = req.body;
 
     if (type === "payment") {
@@ -101,11 +144,26 @@ export const webhook = async (req, res) => {
       const paymentData = await payment.get({ id: data.id });
       const { status }  = paymentData;
 
-      // Busca la orden por mp_preference_id
+      // Busca la orden por el preference_id (external_reference si está disponible)
+      let preferenceId =
+        paymentData.external_reference ||
+        paymentData.metadata?.preference_id ||
+        "";
+
+      // Si el pago viene de una preferencia, resuelve el preference_id vía la merchant order
+      if (!preferenceId && paymentData.order?.id) {
+        try {
+          const mo = await new MerchantOrder(client).get({ merchantOrderId: String(paymentData.order.id) });
+          preferenceId = mo?.preference_id ?? "";
+        } catch (e) {
+          console.warn("webhook: no se pudo resolver la merchant order:", e?.message ?? e);
+        }
+      }
+
       const { data: order } = await supabase
         .from("orders")
         .select("id, status")
-        .eq("mp_preference_id", paymentData.order?.id ?? "")
+        .eq("mp_preference_id", preferenceId)
         .maybeSingle();
 
       if (order) {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { canvasSyncManager } from "../utils/canvasSyncManager.js";
 
-export const useCanvasTextureSync = ({ frontCanvas, backCanvas, selectedView = "front" }) => {
+export const useCanvasTextureSync = ({ frontCanvas, backCanvas }) => {
   const [designTextureFront, setDesignTextureFront] = useState(null);
   const [designTextureBack,  setDesignTextureBack]  = useState(null);
 

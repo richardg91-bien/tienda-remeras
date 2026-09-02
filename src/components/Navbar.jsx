@@ -13,6 +13,9 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Precarga el bundle del Studio al hacer hover (descarga en background)
+  const prefetchStudio = () => { import("../pages/Disenar.jsx"); };
+
   // Detecta scroll
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -32,7 +35,7 @@ export default function Navbar() {
   }, []);
 
   // Cierra el menú al navegar
-  useEffect(() => { setUserMenu(false); }, [location.pathname]);
+  useEffect(() => { setUserMenu(false); }, [location.pathname]); // eslint-disable-line react-hooks/set-state-in-effect
 
   const handleLogout = async () => {
     await logout();
@@ -71,6 +74,8 @@ export default function Navbar() {
         {/* Link Studio — solo desktop, junto al brand */}
         <Link
           to="/disenar"
+          onMouseEnter={prefetchStudio}
+          onFocus={prefetchStudio}
           className={`hidden md:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2
                       ml-48 text-xs font-black uppercase tracking-wider transition-colors
                       px-3 py-1.5 rounded-full ${
@@ -231,7 +236,7 @@ export default function Navbar() {
         <BottomNavItem to="/"          icon="storefront"        label="Tienda"   active={location.pathname === "/"} />
         <BottomNavItem to="/catalogo"  icon="auto_awesome"      label="Catálogo" active={location.pathname === "/catalogo"} />
         <BottomNavItem to="/galeria"   icon="photo_library"     label="Galería"  active={location.pathname === "/galeria"} />
-        <BottomNavItem to="/disenar"   icon="design_services"   label="Studio"   active={location.pathname === "/disenar"} />
+        <BottomNavItem to="/disenar" icon="design_services" label="Studio" active={location.pathname === "/disenar"} onMouseEnter={prefetchStudio} />
 
         {/* Carrito — botón especial */}
         <button
@@ -262,10 +267,12 @@ export default function Navbar() {
   );
 }
 
-function BottomNavItem({ to, icon, label, active }) {
+function BottomNavItem({ to, icon, label, active, onMouseEnter }) {
   return (
     <Link
       to={to}
+      onMouseEnter={onMouseEnter}
+      onTouchStart={onMouseEnter}
       className={`flex flex-col items-center transition-colors duration-200 ${
         active ? "text-primary" : "text-gray-500 hover:text-primary"
       }`}

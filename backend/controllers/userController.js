@@ -3,8 +3,8 @@ import { validationResult } from "express-validator";
 import supabase  from "../config/supabase.js";
 import { cloudinary, uploadAvatar, uploadToCloudinary } from "../config/cloudinary.js";
 
-const sanitize = (user) => {
-  const { password_hash, refresh_token, ...safe } = user;
+const _sanitize = (user) => {
+  const { password_hash: _ph, refresh_token: _rt, ...safe } = user;
   return safe;
 };
 
@@ -31,7 +31,7 @@ export const updateProfile = async (req, res) => {
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
   try {
-    const allowed = ["first_name", "last_name", "phone", "bio"];
+    const allowed = ["first_name", "last_name", "phone", "bio"]; // eslint-disable-line no-unused-vars
     const updates = {};
 
     // Mapea camelCase del body a snake_case de la DB

@@ -11,7 +11,7 @@ import cookieParser from "cookie-parser";
 import rateLimit    from "express-rate-limit";
 
 // Importaciones dinámicas DESPUÉS de dotenv (garantiza que process.env está listo)
-const { default: supabase }      = await import("./config/supabase.js");
+const { default: supabase }      = await import("./config/supabase.js"); // eslint-disable-line no-unused-vars
 const { default: authRoutes }    = await import("./routes/authRoutes.js");
 const { default: userRoutes }    = await import("./routes/userRoutes.js");
 const { default: designRoutes }  = await import("./routes/designRoutes.js");

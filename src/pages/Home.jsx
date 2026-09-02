@@ -5,7 +5,6 @@ import { AnimatePresence } from "framer-motion";
 import Hero from "../components/Hero";
 import Products from "../components/Products";
 import StyleQuiz from "../components/StyleQuiz";
-import AIAssistant from "../components/AIAssistant";
 import { useAuth } from "../context/AuthContext";
 import { products, formatPrice } from "../data/products";
 

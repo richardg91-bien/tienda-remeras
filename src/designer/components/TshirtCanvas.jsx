@@ -6,7 +6,7 @@ import { useTshirtCanvas } from "../hooks/useTshirtCanvas.jsx";
  * Reutilizable para frente y dorso vía prop `view`.
  */
 const TshirtCanvas = ({ svgPath, view }) => {
-  const { canvasRef, tshirtColor } = useTshirtCanvas({ svgPath, view });
+  const { canvasRef, tshirtColor } = useTshirtCanvas({ view });
 
   return (
     <div className="relative" style={{ width: CANVAS_CONFIG.width, height: CANVAS_CONFIG.height }}>

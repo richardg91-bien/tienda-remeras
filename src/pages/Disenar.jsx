@@ -1,7 +1,7 @@
 import { Suspense, useState } from "react";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { Canvas } from "@react-three/fiber";
-import { Environment, OrbitControls, Loader } from "@react-three/drei";
+import { OrbitControls, Loader } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 
 import designerStore                 from "../designer/store/designerStore.js";
@@ -27,8 +27,6 @@ function DesignerContent() {
   const { designTextureFront, designTextureBack, manualTriggerSync } =
     useCanvasTextureSync({ frontCanvas, backCanvas, selectedView });
 
-  const tshirtType = TSHIRT_TYPES[selectedType] || TSHIRT_TYPES["crew-neck"];
-  const svgPath    = selectedView === "front" ? tshirtType.frontPath : tshirtType.backPath;
   const manualSync = () => manualTriggerSync(selectedView);
 
   const handleViewChange = (view) => {
@@ -86,10 +84,13 @@ function DesignerContent() {
             <div className="absolute inset-4 rounded-3xl bg-primary/5 blur-[60px] pointer-events-none" />
             <div className="relative h-full glass-panel rounded-3xl overflow-hidden">
               <Canvas camera={{ position:[0,0,5], fov:45 }}>
+                <ambientLight intensity={0.7} />
+                <directionalLight position={[5, 5, 5]} intensity={1.2} />
+                <directionalLight position={[-5, 2, -3]} intensity={0.4} color="#ffd9a0" />
+                <pointLight position={[-5, -5, -5]} color="#00f2ff" intensity={0.6} />
                 <OrbitControls maxPolarAngle={Math.PI/2} minPolarAngle={Math.PI/3} enableZoom={false} autoRotate autoRotateSpeed={0.5} />
                 <Suspense fallback={null}>
                   <TshirtModel tshirtColor={tshirtColor} designTexture={designTextureFront} designTextureBack={designTextureBack} onViewChange={handleViewChange} />
-                  <Environment preset="sunset" />
                 </Suspense>
               </Canvas>
               <Loader containerStyles={{ position:"absolute", inset:0, background:"rgba(10,10,11,0.85)", borderRadius:"1.5rem" }}
@@ -208,10 +209,13 @@ function DesignerContent() {
           {/* Modelo 3D */}
           <div className="flex-[0.7] min-h-0">
             <Canvas camera={{ position:[0,0,5], fov:50 }}>
+              <ambientLight intensity={0.7} />
+              <directionalLight position={[5, 5, 5]} intensity={1.2} />
+              <directionalLight position={[-5, 2, -3]} intensity={0.4} color="#ffd9a0" />
+              <pointLight position={[-5, -5, -5]} color="#00f2ff" intensity={0.6} />
               <OrbitControls maxPolarAngle={Math.PI/2} minPolarAngle={Math.PI/3} enableZoom={false} autoRotate autoRotateSpeed={1.5} />
               <Suspense fallback={null}>
                 <TshirtModel tshirtColor={tshirtColor} designTexture={designTextureFront} designTextureBack={designTextureBack} onViewChange={handleViewChange} />
-                <Environment preset="sunset" />
               </Suspense>
             </Canvas>
           </div>

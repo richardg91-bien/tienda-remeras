@@ -8,7 +8,7 @@ import canvasStorageManager from "../utils/canvasStorageManager.js";
 import AssetLibrary from "./AssetLibrary.jsx";
 import { useCart } from "../../context/CartContext.jsx";
 import {
-  CANVAS_CONFIG, DEFAULT_TEXT_CONFIG,
+  DEFAULT_TEXT_CONFIG,
   TSHIRT_COLOR_CODES, FONT_OPTIONS,
 } from "../constants/designConstants.js";
 
@@ -19,7 +19,7 @@ const TABS = [
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDone, initialTab }) {
+export default function DesignTools({ manualSync, frontCanvas, backCanvas, initialTab }) {
   const [activeTab, setActiveTab]        = useState(initialTab === "library" ? "library" : "tools");
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [selectedSize, setSelectedSize]  = useState(null);
@@ -35,7 +35,6 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDon
 
   const dispatch    = useDispatch();
   const tshirtColor = useSelector((s) => s.designer.tshirtColor);
-  const selectedView = useSelector((s) => s.designer.selectedView);
   const { activeCanvas, selectedObject, setSelectedObject } = useCanvas();
   const { addItem, openCart } = useCart();
 
@@ -112,6 +111,7 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, onDon
     activeCanvas.add(text);
     activeCanvas.setActiveObject(text);
     activeCanvas.renderAll();
+    manualSync?.();
     setTextProps({ text: "Tu texto aquí", color: DEFAULT_TEXT_CONFIG.fill, font: "arial", fontSize: 20 });
   };
 

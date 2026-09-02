@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { products, formatPrice } from "../data/products";
 import { useCart } from "../context/CartContext";
@@ -35,7 +35,6 @@ const BENEFITS = [
 
 export default function Producto() {
   const { id }          = useParams();
-  const navigate        = useNavigate();
   const product         = products.find(p => p.id === parseInt(id));
   const { addItem, openCart } = useCart();
 

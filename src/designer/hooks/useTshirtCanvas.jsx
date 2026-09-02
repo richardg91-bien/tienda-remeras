@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import * as fabric from "fabric";
 import { CANVAS_CONFIG } from "../constants/designConstants.js";
 import { useCanvas } from "./useCanvas.jsx";
 import canvasStorageManager from "../utils/canvasStorageManager.js";
 
-export const useTshirtCanvas = ({ svgPath, view }) => {
+export const useTshirtCanvas = ({ view }) => {
   const canvasRef  = useRef(null);
   const fabricRef  = useRef(null);
   const tshirtColor = useSelector((state) => state.designer.tshirtColor);
-  const { setFrontCanvas, setBackCanvas, setActiveCanvas, setSelectedObject } = useCanvas();
+  const { setFrontCanvas, setBackCanvas, setSelectedObject } = useCanvas();
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -26,12 +26,11 @@ export const useTshirtCanvas = ({ svgPath, view }) => {
     // Registra en el contexto
     if (view === "front") setFrontCanvas(canvas);
     else                  setBackCanvas(canvas);
-    setActiveCanvas(canvas);
 
     // Carga objetos guardados en localStorage
     const saved = canvasStorageManager.loadCanvasObjects(view);
     if (saved.length > 0) {
-      canvas.loadFromJSON({ objects: saved }, () => canvas.renderAll());
+      canvas.loadFromJSON({ objects: saved }).then(() => canvas.renderAll());
     }
 
     // Selección de objetos
@@ -49,6 +48,7 @@ export const useTshirtCanvas = ({ svgPath, view }) => {
       if (view === "front") setFrontCanvas(null);
       else                  setBackCanvas(null);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
   return { canvasRef, tshirtColor };

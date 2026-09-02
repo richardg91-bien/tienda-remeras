@@ -28,7 +28,7 @@ const COOKIE_OPTS = {
 
 /** Devuelve el usuario sin campos sensibles */
 const sanitize = (user) => {
-  const { password_hash, refresh_token, ...safe } = user;
+  const { password_hash: _ph, refresh_token: _rt, ...safe } = user;
   return safe;
 };
 

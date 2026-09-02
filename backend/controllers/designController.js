@@ -1,4 +1,3 @@
-import { validationResult } from "express-validator";
 import supabase  from "../config/supabase.js";
 import { cloudinary, uploadDesign, uploadToCloudinary } from "../config/cloudinary.js";
 
@@ -235,7 +234,7 @@ export const likeDesign = async (req, res) => {
     }
 
     return res.json({ likes: data });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ message: "Error." });
   }
 };

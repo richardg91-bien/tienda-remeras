@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../data/products";
@@ -6,54 +5,12 @@ import { formatPrice } from "../data/products";
 const WHATSAPP_PHONE = import.meta.env.VITE_WHATSAPP_PHONE || "5491122334455";
 const BACKEND_URL    = import.meta.env.VITE_BACKEND_URL    || "http://localhost:3000";
 
-export default function Cart() {
-  const {
-    items, isOpen, closeCart,
-    removeItem, updateQty,
-    clearCart, totalItems, totalPrice,
-  } = useCart();
-
-  const dragControls = useDragControls();
-
-  // ── Checkout MercadoPago ─────────────────────────────
-  const checkoutMP = async () => {
-    if (items.length === 0) return;
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/payments/create_preference`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          cart: items.map((i) => ({
-            name:     i.name,
-            price:    i.price,
-            quantity: i.quantity,
-          })),
-        }),
-      });
-      const data = await res.json();
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        alert("Error al generar el pago. Intentá de nuevo.");
-      }
-    } catch {
-      alert("No se pudo conectar con el servidor de pagos.");
-    }
-  };
-
-  // ── Checkout WhatsApp ────────────────────────────────
-  const checkoutWhatsApp = () => {
-    if (items.length === 0) return;
-    const lines = items
-      .map((i) => `• ${i.name} (Talle: ${i.selectedSize ?? "S/T"}) x${i.quantity} — ${formatPrice(i.price * i.quantity)}`)
-      .join("\n");
-    const msg = encodeURIComponent(
-      `Hola! Quiero hacer un pedido:\n\n${lines}\n\nTotal: ${formatPrice(totalPrice)}`
-    );
-    window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${msg}`, "_blank");
-  };
-
-  const CartContent = () => (
+// ── Contenido del carrito (componente estático) ──────
+function CartContent({
+  items, totalItems, totalPrice, closeCart, clearCart,
+  removeItem, updateQty, checkoutMP, checkoutWhatsApp,
+}) {
+  return (
     <>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4
@@ -199,6 +156,54 @@ export default function Cart() {
       )}
     </>
   );
+}
+
+export default function Cart() {
+  const {
+    items, isOpen, closeCart,
+    removeItem, updateQty,
+    clearCart, totalItems, totalPrice,
+  } = useCart();
+
+  const dragControls = useDragControls();
+
+  // ── Checkout MercadoPago ─────────────────────────────
+  const checkoutMP = async () => {
+    if (items.length === 0) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/payments/create_preference`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          cart: items.map((i) => ({
+            name:     i.name,
+            price:    i.price,
+            quantity: i.quantity,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        alert("Error al generar el pago. Intentá de nuevo.");
+      }
+    } catch {
+      alert("No se pudo conectar con el servidor de pagos.");
+    }
+  };
+
+  // ── Checkout WhatsApp ────────────────────────────────
+  const checkoutWhatsApp = () => {
+    if (items.length === 0) return;
+    const lines = items
+      .map((i) => `• ${i.name} (Talle: ${i.selectedSize ?? "S/T"}) x${i.quantity} — ${formatPrice(i.price * i.quantity)}`)
+      .join("\n");
+    const msg = encodeURIComponent(
+      `Hola! Quiero hacer un pedido:\n\n${lines}\n\nTotal: ${formatPrice(totalPrice)}`
+    );
+    window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${msg}`, "_blank");
+  };
 
   return (
     <>
@@ -227,7 +232,12 @@ export default function Cart() {
             style={{ zIndex: 9999 }}
             role="dialog" aria-label="Carrito de compras"
           >
-            <CartContent />
+            <CartContent
+              items={items} totalItems={totalItems} totalPrice={totalPrice}
+              closeCart={closeCart} clearCart={clearCart}
+              removeItem={removeItem} updateQty={updateQty}
+              checkoutMP={checkoutMP} checkoutWhatsApp={checkoutWhatsApp}
+            />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -265,7 +275,12 @@ export default function Cart() {
               Arrastrá hacia abajo para cerrar
             </p>
 
-            <CartContent />
+            <CartContent
+              items={items} totalItems={totalItems} totalPrice={totalPrice}
+              closeCart={closeCart} clearCart={clearCart}
+              removeItem={removeItem} updateQty={updateQty}
+              checkoutMP={checkoutMP} checkoutWhatsApp={checkoutWhatsApp}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -156,6 +156,7 @@ export default function Perfil() {
       finally { setLoadingOrders(false); }
     };
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = async () => {
