@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { products, formatPrice } from "../data/products";
 import { useCart } from "../context/CartContext";
+import { prefetchStudio } from "../lib/prefetchStudio";
 import Products from "../components/Products";
 
 // Paleta oficial de colores de remeras
@@ -328,6 +329,8 @@ export default function Producto() {
 
             {/* CTA Design Studio */}
             <Link to="/disenar"
+              onMouseEnter={prefetchStudio}
+              onFocus={prefetchStudio}
               className="flex items-center gap-3 p-4 glass-panel-accent rounded-2xl
                          hover:border-primary/40 transition-all duration-200 group">
               <span className="material-symbols-outlined text-primary text-[28px]">design_services</span>

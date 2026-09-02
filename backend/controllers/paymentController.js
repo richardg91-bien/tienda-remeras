@@ -29,6 +29,12 @@ const validateWebhookSignature = (req) => {
   const hash = parts.v1;
   if (!ts || !hash) return false;
 
+  // Rechaza timestamps viejos (replay attacks): tolerancia de 5 minutos
+  const tsMs = Number(ts) * 1000;
+  if (!Number.isFinite(tsMs) || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
+    return false;
+  }
+
   // dataID: query param ?data.id o del body
   const dataId = req.query["data.id"] || req.body?.data?.id;
   if (!dataId) return false;
@@ -37,7 +43,10 @@ const validateWebhookSignature = (req) => {
   const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
   const computed = crypto.createHmac("sha256", secret).update(manifest).digest("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(hash));
+  // timingSafeEqual exige buffers de igual longitud (evita throw con hashes manipulados)
+  const a = Buffer.from(computed);
+  const b = Buffer.from(hash);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 };
 
 // ── POST /api/payments/create_preference ─────────────────────────────────────
@@ -176,6 +185,9 @@ export const webhook = async (req, res) => {
           .from("orders")
           .update({ mp_payment_id: String(data.id), mp_status: status, status: newStatus })
           .eq("id", order.id);
+      } else {
+        // Pago válido sin orden asociada: se registra para poder conciliar a mano.
+        console.warn(`webhook: pago ${data.id} (${status}) sin orden para preference "${preferenceId}".`);
       }
     }
 

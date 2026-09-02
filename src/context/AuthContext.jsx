@@ -65,7 +65,8 @@ export function AuthProvider({ children }) {
           }
         }
       } catch {
-        clearToken();
+        // Error de red (backend caído, offline): NO borra el token,
+        // así la sesión se recupera cuando vuelva la conexión.
       } finally {
         setLoading(false);
       }
