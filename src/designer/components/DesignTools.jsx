@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import * as fabric from "fabric";
@@ -328,15 +329,19 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
         </div>
       </div>
 
-      {/* ── Modal selector de talle ── */}
+      {/* ── Modal selector de talle ──
+          Renderizado con createPortal en document.body:
+          si se dejara dentro de este panel, el overflow/scroll del contenedor
+          y el stacking context del panel harían que quedara DETRÁS del canvas 3D
+          o recortado. En el body queda siempre adelante, centrado y visible. */}
       <AnimatePresence>
-        {showSizeModal && (
+        {showSizeModal && createPortal(
           <>
             {/* Overlay */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => { setShowSizeModal(false); setSelectedSize(null); }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10002]"
             />
 
             {/* Modal — siempre centrado */}
@@ -347,7 +352,7 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                          w-[calc(100vw-32px)] max-w-sm
-                         bg-zinc-950 border border-white/10 rounded-3xl z-[61]
+                         bg-zinc-950 border border-white/10 rounded-3xl z-[10003]
                          shadow-[0_20px_60px_rgba(0,0,0,0.8)]
                          flex flex-col overflow-hidden"
               style={{ maxHeight: "calc(100vh - 120px)" }}
@@ -427,7 +432,8 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
                 </button>
               </div>
             </motion.div>
-          </>
+          </>,
+          document.body
         )}
       </AnimatePresence>
     </>
