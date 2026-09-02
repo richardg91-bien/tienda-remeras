@@ -215,7 +215,7 @@ export default function Cart() {
             transition={{ duration:0.2 }}
             onClick={closeCart}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-            style={{ zIndex: 9998 }}
+            style={{ zIndex: 10000 }}
             aria-hidden />
         )}
       </AnimatePresence>
@@ -229,7 +229,7 @@ export default function Cart() {
             className="hidden md:flex fixed top-0 right-0 w-full max-w-md
                        bg-background border-l border-white/8 flex-col h-full
                        shadow-[-8px_0_60px_rgba(0,0,0,0.8)]"
-            style={{ zIndex: 9999 }}
+            style={{ zIndex: 10001, isolation: "isolate" }}
             role="dialog" aria-label="Carrito de compras"
           >
             <CartContent
@@ -261,7 +261,7 @@ export default function Cart() {
             className="md:hidden fixed bottom-0 left-0 right-0
                        bg-background border-t border-white/10 rounded-t-3xl
                        flex flex-col shadow-[0_-8px_40px_rgba(0,0,0,0.7)]"
-            style={{ maxHeight:"90dvh", zIndex: 9999 }}
+            style={{ maxHeight:"90dvh", zIndex: 10001, isolation: "isolate" }}
             role="dialog" aria-label="Carrito de compras"
           >
             {/* Handle arrastrable */}

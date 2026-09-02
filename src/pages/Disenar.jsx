@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Loader } from "@react-three/drei";
@@ -14,7 +14,26 @@ import DesignTools                   from "../designer/components/DesignTools.js
 import { TSHIRT_TYPES }              from "../designer/constants/designConstants.js";
 import StudioOnboarding              from "../components/StudioOnboarding.jsx";
 
+// Detecta el breakpoint real: los layouts desktop y mobile NO deben montarse
+// ambos a la vez (aunque uno esté oculto con CSS), porque cada layout registra
+// sus propios canvas de Fabric como frontCanvas/backCanvas en el contexto y el
+// último en montar gana — haciendo que las imágenes de la biblioteca se peguen
+// en un canvas invisible en lugar del 2D que el usuario está viendo.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = (e) => setIsDesktop(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return isDesktop;
+}
+
 function DesignerContent() {
+  const isDesktop    = useIsDesktop();
   const dispatch     = useDispatch();
   const tshirtColor  = useSelector((s) => s.designer.tshirtColor);
   const selectedView = useSelector((s) => s.designer.selectedView);
@@ -40,7 +59,8 @@ function DesignerContent() {
           DESKTOP
           Layout: [3D grande] [Canvas 2D] [panel tools flotante]
           ══════════════════════════════════════ */}
-      <div className="hidden md:flex flex-col h-full overflow-hidden">
+      {!isDesktop ? null : (
+      <div className="flex flex-col h-full overflow-hidden relative z-0">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3
@@ -150,12 +170,14 @@ function DesignerContent() {
           </AnimatePresence>
         </div>
       </div>
+      )}
 
       {/* ══════════════════════════════════════
           MOBILE
           Layout: canvas 2D + 3D visibles, hamburguesa para herramientas
           ══════════════════════════════════════ */}
-      <div className="flex md:hidden flex-col h-full overflow-hidden relative">
+      {!isDesktop && (
+      <div className="flex flex-col h-full overflow-hidden relative z-0">
 
         {/* Header mobile */}
         <div className="flex items-center justify-between px-4 py-2.5
@@ -279,6 +301,7 @@ function DesignerContent() {
           )}
         </AnimatePresence>
       </div>
+      )}
     </div>
   );
 }
