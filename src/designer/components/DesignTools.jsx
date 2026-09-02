@@ -125,12 +125,22 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
   };
 
   const clearAll = () => {
-    if (!activeCanvas) return;
-    activeCanvas.clear();
+    // Limpia AMBOS canvas (frente y dorso), no solo el activo
+    [frontCanvas, backCanvas].forEach((c) => {
+      if (!c) return;
+      c.discardActiveObject();
+      // remove() en lugar de clear(): dispara object:removed → guarda [] en storage
+      c.remove(...c.getObjects());
+      c.renderAll();
+    });
+    setSelectedObject(null);
+    // Borra el diseño persistido de ambas vistas
     canvasStorageManager.clearCanvasStorage("all");
-    activeCanvas.renderAll();
-    // Sincroniza el 3D con el canvas vacío
-    setTimeout(() => manualSync?.(), 60);
+    // Sincroniza el 3D de ambas caras con los canvas vacíos
+    setTimeout(() => {
+      manualSync?.("front");
+      manualSync?.("back");
+    }, 60);
   };
 
   const updateText = (key, value) => {
