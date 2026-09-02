@@ -12,9 +12,12 @@ import {
 } from "../constants/designConstants.js";
 
 const TABS = [
-  { id: "tools",   icon: "build",        label: "Herramientas" },
-  { id: "library", icon: "photo_library", label: "Biblioteca"  },
+  { id: "tools",   icon: "build",         label: "Herramientas" },
+  { id: "library", icon: "photo_library",  label: "Biblioteca"  },
+  { id: "cart",    icon: "shopping_cart",  label: "Carrito"     },
 ];
+
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export default function DesignTools({ manualSync, frontCanvas, backCanvas, initialTab }) {
   const [activeTab, setActiveTab]        = useState(initialTab === "library" ? "library" : "tools");
@@ -232,6 +235,65 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
         {activeTab === "library" && (
           <div className="flex-1 overflow-hidden">
             <AssetLibrary manualSync={manualSync} />
+          </div>
+        )}
+
+        {/* ── Pestaña: Carrito (talle + agregar) ── */}
+        {activeTab === "cart" && (
+          <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1">
+            {/* Resumen del diseño */}
+            <div className="flex items-center gap-3 p-3 glass-panel rounded-2xl flex-shrink-0">
+              <div className="w-11 h-13 rounded-xl flex-shrink-0 border border-white/10
+                              flex items-center justify-center"
+                   style={{ backgroundColor: tshirtColor }}>
+                <span className="material-symbols-outlined text-[20px] text-black/40">checkroom</span>
+              </div>
+              <div className="min-w-0">
+                <p className="font-black text-xs">Remera Personalizada</p>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
+                  Color
+                  <span className="inline-block w-2.5 h-2.5 rounded-full border border-white/20"
+                    style={{ backgroundColor: tshirtColor }} />
+                  · Tu diseño incluido
+                </p>
+                <p className="text-primary font-black text-sm mt-0.5">$15.000</p>
+              </div>
+            </div>
+
+            {/* Talles — al elegir uno se abre el modal de confirmación */}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-2">
+                Elegí tu talle
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {SIZES.map((size) => (
+                  <button key={size}
+                    onClick={() => document.dispatchEvent(new CustomEvent("studio:addToCart", { detail: { size } }))}
+                    className="py-3 rounded-xl font-black text-sm border border-white/15 text-gray-400
+                               hover:border-primary/60 hover:text-white hover:bg-primary/5
+                               active:scale-95 transition-all duration-150">
+                    {size}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-gray-600 text-center mt-2">
+                Para look oversize elegí un talle más grande
+              </p>
+            </div>
+
+            {/* Botón directo al modal */}
+            <div className="mt-auto pt-3 border-t border-white/10">
+              <button
+                onClick={() => document.dispatchEvent(new CustomEvent("studio:addToCart"))}
+                className="w-full py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest
+                           bg-primary/10 text-primary border border-primary/40
+                           hover:bg-primary/20 active:scale-95 transition-all duration-200
+                           flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[16px]">straighten</span>
+                Guía de talles
+              </button>
+            </div>
           </div>
         )}
 

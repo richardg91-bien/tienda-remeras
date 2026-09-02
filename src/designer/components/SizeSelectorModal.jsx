@@ -23,9 +23,13 @@ export default function SizeSelectorModal({ frontCanvas, backCanvas }) {
   const { activeCanvas } = useCanvas();
   const { addItem, openCart } = useCart();
 
-  // Escucha el evento del botón "Agregar al carrito" (mobile y desktop)
+  // Escucha el evento del botón "Agregar al carrito" (mobile y desktop).
+  // Si el evento trae detail.size (pestaña Carrito), lo preselecciona.
   useEffect(() => {
-    const handler = () => setShow(true);
+    const handler = (e) => {
+      if (e.detail?.size) setSelectedSize(e.detail.size);
+      setShow(true);
+    };
     document.addEventListener("studio:addToCart", handler);
     return () => document.removeEventListener("studio:addToCart", handler);
   }, []);
