@@ -144,7 +144,7 @@ function Message({ msg, onAddToCart }) {
             {msg.products.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center gap-3 p-2.5 glass-panel rounded-xl"
+                className="flex items-center gap-3 p-2.5 glass-panel rounded-xl max-w-full"
               >
                 <img src={p.image} alt={p.name}
                      className="w-12 h-14 object-cover rounded-lg flex-shrink-0" />
@@ -257,9 +257,10 @@ export default function AIAssistant() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.88, y: 16 }}
             transition={{ type: "spring", damping: 26, stiffness: 300 }}
-            className="fixed bottom-40 right-5 md:bottom-24 md:right-6 z-50
-                       w-[340px] max-h-[500px] bg-background border border-white/10
-                       rounded-3xl flex flex-col overflow-hidden
+            className="fixed bottom-24 right-3 md:bottom-24 md:right-6 z-50
+                       w-[min(340px,calc(100vw-24px))] max-h-[min(500px,calc(100dvh-11rem))]
+                       bg-background border border-white/10
+                       rounded-3xl flex flex-col overflow-hidden min-h-0
                        shadow-[0_20px_60px_rgba(0,0,0,0.9)]"
           >
             {/* Header */}
@@ -279,7 +280,7 @@ export default function AIAssistant() {
             </div>
 
             {/* Mensajes */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, i) => (
                 <Message key={i} msg={msg} onAddToCart={handleAddToCart} />
               ))}
