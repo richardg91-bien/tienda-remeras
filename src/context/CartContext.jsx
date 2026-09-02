@@ -3,6 +3,8 @@ import { createContext, useContext, useReducer, useEffect } from "react";
 const CartContext = createContext(null);
 
 // ── Reducer ────────────────────────────────────────────
+const MAX_QTY = 10; // tope por ítem para evitar cantidades absurdas
+
 function cartReducer(state, action) {
   switch (action.type) {
 
@@ -15,7 +17,7 @@ function cartReducer(state, action) {
           ...state,
           items: state.items.map((i) =>
             i.id === action.payload.id && i.selectedSize === action.payload.selectedSize
-              ? { ...i, quantity: i.quantity + 1 }
+              ? { ...i, quantity: Math.min(i.quantity + 1, MAX_QTY) }
               : i
           ),
         };
@@ -43,7 +45,7 @@ function cartReducer(state, action) {
       return {
         ...state,
         items: state.items.map((item, idx) =>
-          idx === index ? { ...item, quantity } : item
+          idx === index ? { ...item, quantity: Math.min(quantity, MAX_QTY) } : item
         ),
       };
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { prefetchStudio } from "../lib/prefetchStudio";
 
 const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -244,7 +245,10 @@ export default function Galeria() {
                   Usalo en tu remera personalizada directamente en el Studio.
                 </p>
               </div>
-              <Link to="/disenar" className="btn-primary flex-shrink-0">
+              <Link to="/disenar"
+                onMouseEnter={prefetchStudio}
+                onFocus={prefetchStudio}
+                className="btn-primary flex-shrink-0">
                 <span className="material-symbols-outlined text-[18px]">design_services</span>
                 Ir al Studio
               </Link>
@@ -281,7 +285,7 @@ export default function Galeria() {
                   </div>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
-                  <Link to="/disenar"
+                  <Link to="/disenar" onMouseEnter={prefetchStudio}
                     className="btn-primary text-xs py-2 px-4">
                     <span className="material-symbols-outlined text-[16px]">design_services</span>
                     Usar

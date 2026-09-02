@@ -22,7 +22,9 @@ const generateTokens = (userId) => {
 const COOKIE_OPTS = {
   httpOnly: true,
   secure:   process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  // "lax" permite que la cookie viaje en la navegación de retorno
+  // desde MercadoPago (cross-site); "strict" la bloquearía y desloguearía al usuario.
+  sameSite: "lax",
   path:     "/",
 };
 

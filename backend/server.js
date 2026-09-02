@@ -44,14 +44,17 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
-// Rate limit global
-app.use(rateLimit({
-  windowMs:        15 * 60 * 1000,
-  max:             200,
-  standardHeaders: true,
-  legacyHeaders:   false,
-  message:         { message: "Demasiadas solicitudes. Intentá en unos minutos." },
-}));
+// Rate limit global (excluye el webhook de MercadoPago: sus reintentos no deben consumir cupo)
+app.use((req, res, next) => {
+  if (req.path === "/api/payments/webhook") return next();
+  rateLimit({
+    windowMs:        15 * 60 * 1000,
+    max:             200,
+    standardHeaders: true,
+    legacyHeaders:   false,
+    message:         { message: "Demasiadas solicitudes. Intentá en unos minutos." },
+  })(req, res, next);
+});
 
 // ── Rutas de la API ───────────────────────────────────────
 app.use("/api/auth",     authRoutes);

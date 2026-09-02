@@ -79,8 +79,8 @@ function DesignerContent() {
         {/* Área de trabajo */}
         <div className="flex-1 flex overflow-hidden relative">
 
-          {/* 3D — ocupa la mayor parte */}
-          <div className="flex-1 relative p-4">
+          {/* 3D — ocupa la mayor parte (isolate confina el canvas WebGL a su stacking context) */}
+          <div className="flex-1 relative p-4 isolate z-0">
             <div className="absolute inset-4 rounded-3xl bg-primary/5 blur-[60px] pointer-events-none" />
             <div className="relative h-full glass-panel rounded-3xl overflow-hidden">
               <Canvas camera={{ position:[0,0,5], fov:45 }}>
@@ -102,7 +102,7 @@ function DesignerContent() {
           </div>
 
           {/* Canvas 2D — siempre montados ambos, solo uno visible */}
-          <div className="flex flex-col items-center justify-center gap-3 p-4 flex-shrink-0">
+          <div className="flex flex-col items-center justify-center gap-3 p-4 flex-shrink-0 isolate z-0 relative">
             {/* Frente — siempre montado */}
             <div className={selectedView === "front" ? "block" : "hidden"}>
               <div className="glass-panel rounded-3xl overflow-hidden border border-white/8">
@@ -185,10 +185,13 @@ function DesignerContent() {
           </button>
         </div>
 
-        {/* Canvas 2D + 3D siempre montados para mantener sincronización */}
+        {/* Canvas 2D + 3D siempre montados para mantener sincronización
+            NOTE: "isolate z-0" crea un stacking context propio para cada canvas.
+            Sin esto, en mobile los canvas (WebGL/Fabric) son promovidos por la GPU
+            y se dibujan POR ENCIMA del carrito aunque este sea fixed z-9999. */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Canvas 2D — ambos siempre montados, solo uno visible */}
-          <div className="flex-1 flex items-center justify-center p-3 min-h-0">
+          <div className="flex-1 flex items-center justify-center p-3 min-h-0 relative z-0 isolate">
             <div className={`glass-panel rounded-2xl overflow-hidden border border-white/8 h-full flex items-center justify-center ${selectedView === "front" ? "block" : "hidden"}`}>
               <TshirtCanvas svgPath={TSHIRT_TYPES[selectedType]?.frontPath || TSHIRT_TYPES["crew-neck"].frontPath} view="front" />
             </div>
@@ -206,8 +209,8 @@ function DesignerContent() {
             </div>
           </div>
 
-          {/* Modelo 3D */}
-          <div className="flex-[0.7] min-h-0">
+          {/* Modelo 3D — isolate evita que el canvas WebGL tape el carrito en mobile */}
+          <div className="flex-[0.7] min-h-0 relative z-0 isolate">
             <Canvas camera={{ position:[0,0,5], fov:50 }}>
               <ambientLight intensity={0.7} />
               <directionalLight position={[5, 5, 5]} intensity={1.2} />

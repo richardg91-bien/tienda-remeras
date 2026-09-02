@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { prefetchStudio } from "../lib/prefetchStudio";
 
 export default function Navbar() {
   const [scrolled, setScrolled]   = useState(false);
@@ -12,9 +13,6 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Precarga el bundle del Studio al hacer hover (descarga en background)
-  const prefetchStudio = () => { import("../pages/Disenar.jsx"); };
 
   // Detecta scroll
   useEffect(() => {
