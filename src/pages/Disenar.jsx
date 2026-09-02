@@ -11,6 +11,7 @@ import { useCanvasTextureSync }      from "../designer/hooks/useCanvasTextureSyn
 import { TshirtModel }               from "../designer/components/TshirtModel.jsx";
 import TshirtCanvas                  from "../designer/components/TshirtCanvas.jsx";
 import DesignTools                   from "../designer/components/DesignTools.jsx";
+import SizeSelectorModal             from "../designer/components/SizeSelectorModal.jsx";
 import { TSHIRT_TYPES }              from "../designer/constants/designConstants.js";
 import StudioOnboarding              from "../components/StudioOnboarding.jsx";
 
@@ -47,6 +48,10 @@ function DesignerContent() {
     useCanvasTextureSync({ frontCanvas, backCanvas, selectedView });
 
   const manualSync = () => manualTriggerSync(selectedView);
+
+  // Modal de talle — montado SIEMPRE a nivel de página (fuera de paneles con
+  // overflow/transform) para que quede adelante del 3D y nunca quede inaccesible.
+  // Tanto el botón flotante mobile como el panel de herramientas disparan "studio:addToCart".
 
   const handleViewChange = (view) => {
     if (view !== selectedView) dispatch(setSelectedView(view));
@@ -302,6 +307,9 @@ function DesignerContent() {
         </AnimatePresence>
       </div>
       )}
+
+      {/* Modal de talle — siempre montado, portal a document.body */}
+      <SizeSelectorModal frontCanvas={frontCanvas} backCanvas={backCanvas} />
     </div>
   );
 }
