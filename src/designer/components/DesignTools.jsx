@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import * as fabric from "fabric";
@@ -6,6 +6,8 @@ import { setTshirtColor } from "../store/designerSlice.js";
 import { useCanvas } from "../hooks/useCanvas.jsx";
 import canvasStorageManager from "../utils/canvasStorageManager.js";
 import AssetLibrary from "./AssetLibrary.jsx";
+import ProjectManager from "./ProjectManager.jsx";
+import { uploadPrivateDesignAsset } from "../utils/designerApi.js";
 import {
   DEFAULT_TEXT_CONFIG,
   TSHIRT_COLOR_CODES, FONT_OPTIONS,
@@ -14,14 +16,30 @@ import {
 const TABS = [
   { id: "tools",   icon: "build",         label: "Herramientas" },
   { id: "library", icon: "photo_library",  label: "Biblioteca"  },
+  { id: "projects",icon: "folder_open",   label: "Proyectos"    },
   { id: "cart",    icon: "shopping_cart",  label: "Carrito"     },
 ];
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-export default function DesignTools({ manualSync, frontCanvas, backCanvas, initialTab }) {
+export default function DesignTools({
+  manualSync,
+  frontCanvas,
+  backCanvas,
+  initialTab,
+  productRef = "tee-classic",
+  surfaces = [],
+  productModels = [],
+  productModel,
+  onProjectLoad,
+  cartEnabled = true,
+}) {
   const [activeTab, setActiveTab]        = useState(initialTab === "library" ? "library" : "tools");
   const [addedOk, setAddedOk]            = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  const currentTab = !cartEnabled && activeTab === "cart" ? "tools" : activeTab;
 
   // El modal de talle vive en SizeSelectorModal (montado a nivel de página).
   // Este botón solo dispara el evento global; escucha la confirmación para el feedback visual.
@@ -39,7 +57,7 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
   const { activeCanvas, selectedObject, setSelectedObject } = useCanvas();
 
   const [textProps, setTextProps] = useState({
-    text: "", color: "#ffffff", font: "arial", fontSize: 20,
+    text: "", color: "#1f2937", font: "arial", fontSize: 20,
   });
 
   // ── Acciones sobre el canvas ──────────────────────────
@@ -56,6 +74,62 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
     activeCanvas.renderAll();
     manualSync?.();
     setTextProps({ text: "Tu texto aquí", color: DEFAULT_TEXT_CONFIG.fill, font: "arial", fontSize: 20 });
+  };
+
+  const addUploadedImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setUploadMessage("Elegí un archivo de imagen válido.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setUploadMessage("La imagen debe pesar menos de 8 MB.");
+      return;
+    }
+    if (!activeCanvas) {
+      setUploadMessage("El canvas todavía se está preparando. Volvé a intentar.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadMessage("");
+    try {
+      const source = await optimizeImage(file);
+      let privateAssetPath = "";
+      if (localStorage.getItem("accessToken")) {
+        try {
+          const asset = await uploadPrivateDesignAsset(file);
+          privateAssetPath = asset.path;
+        } catch (error) {
+          setUploadMessage(`La imagen se agregó, pero no se pudo respaldar en tu biblioteca privada: ${error.message}`);
+        }
+      } else {
+        setUploadMessage("Imagen agregada en este dispositivo. Iniciá sesión para respaldarla en tu biblioteca privada.");
+      }
+
+      const image = await fabric.Image.fromURL(source);
+      const scale = Math.min(
+        1,
+        (activeCanvas.width * 0.6) / image.width,
+        (activeCanvas.height * 0.6) / image.height,
+      );
+      image.scale(scale);
+      image.set({
+        left: (activeCanvas.width - image.getScaledWidth()) / 2,
+        top: (activeCanvas.height - image.getScaledHeight()) / 2,
+        ...(privateAssetPath ? { privateAssetPath } : {}),
+      });
+      activeCanvas.add(image);
+      activeCanvas.setActiveObject(image);
+      activeCanvas.renderAll();
+      manualSync?.();
+    } catch (error) {
+      setUploadMessage(`No se pudo agregar la imagen: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const deleteSelected = () => {
@@ -77,8 +151,10 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
       c.renderAll();
     });
     setSelectedObject(null);
-    // Borra el diseño persistido de ambas vistas
-    canvasStorageManager.clearCanvasStorage("all");
+    surfaces.forEach((surface) => {
+      canvasStorageManager.clearProductCanvasObjects(productRef, surface.id);
+    });
+    if (productRef === "tee-classic") canvasStorageManager.clearCanvasStorage("all");
     // Sincroniza el 3D de ambas caras con los canvas vacíos
     setTimeout(() => {
       manualSync?.("front");
@@ -99,15 +175,15 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
 
   return (
     <>
-      <div className="flex flex-col h-full gap-3">
+      <div className="designer-tools flex flex-col h-full gap-3">
 
         {/* ── Selector de pestañas ── */}
         <div className="flex gap-1 glass-panel rounded-xl p-1 flex-shrink-0">
-          {TABS.map((tab) => (
+          {TABS.filter((tab) => cartEnabled || tab.id !== "cart").map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg
                           text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
-                activeTab === tab.id
+                currentTab === tab.id
                   ? "bg-primary text-background"
                   : "text-gray-500 hover:text-white"
               }`}>
@@ -118,7 +194,7 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
         </div>
 
         {/* ── Pestaña: Herramientas ── */}
-        {activeTab === "tools" && (
+        {currentTab === "tools" && (
           <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1">
 
             {/* Diseño */}
@@ -128,6 +204,19 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
               </p>
               <div className="flex flex-col gap-2">
                 <ToolBtn icon="title" label="Agregar texto" onClick={addText} />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={addUploadedImage}
+                  className="hidden"
+                />
+                <ToolBtn
+                  icon={uploading ? "hourglass_top" : "upload"}
+                  label={uploading ? "Cargando imagen…" : "Subir imagen propia"}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                />
                 <button
                   onClick={() => setActiveTab("library")}
                   className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
@@ -138,10 +227,12 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
                   <span className="material-symbols-outlined text-[16px]">photo_library</span>
                   Ir a biblioteca
                 </button>
+                {uploadMessage && <p role="status" className="text-[10px] leading-relaxed text-gray-600">{uploadMessage}</p>}
               </div>
             </div>
 
             {/* Color remera */}
+            {cartEnabled && (
             <div className="border-t border-white/10 pt-3">
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-2">
                 Color remera
@@ -173,6 +264,7 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
                 ))}
               </div>
             </div>
+            )}
 
             {/* Editar texto */}
             {isTextSelected && (
@@ -232,14 +324,28 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
         )}
 
         {/* ── Pestaña: Biblioteca ── */}
-        {activeTab === "library" && (
+        {currentTab === "library" && (
           <div className="flex-1 overflow-hidden">
             <AssetLibrary manualSync={manualSync} />
           </div>
         )}
 
+        {currentTab === "projects" && (
+          <div className="flex-1 overflow-y-auto pr-1">
+            <ProjectManager
+              frontCanvas={frontCanvas}
+              backCanvas={backCanvas}
+              tshirtColor={tshirtColor}
+              manualSync={manualSync}
+              productModels={productModels}
+              productModel={productModel}
+              onProjectLoad={onProjectLoad}
+            />
+          </div>
+        )}
+
         {/* ── Pestaña: Carrito (talle + agregar) ── */}
-        {activeTab === "cart" && (
+        {cartEnabled && currentTab === "cart" && (
           <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1">
             {/* Resumen del diseño */}
             <div className="flex items-center gap-3 p-3 glass-panel rounded-2xl flex-shrink-0">
@@ -298,7 +404,7 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
         )}
 
         {/* ── Botón principal: Agregar al carrito ── */}
-        <div className="flex-shrink-0 pt-2 border-t border-white/10">
+        {cartEnabled ? <div className="flex-shrink-0 pt-2 border-t border-white/10">
           <motion.button
             onClick={() => document.dispatchEvent(new CustomEvent("studio:addToCart"))}
             whileTap={{ scale: 0.97 }}
@@ -327,7 +433,11 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
               )}
             </AnimatePresence>
           </motion.button>
-        </div>
+        </div> : (
+          <p className="flex-shrink-0 rounded-xl border border-[#e2e4ed] bg-white p-3 text-[11px] leading-relaxed text-gray-600">
+            La vista previa se puede personalizar y guardar. La integración con catálogo y carrito de este producto todavía está pendiente.
+          </p>
+        )}
       </div>
 
     </>
@@ -335,15 +445,41 @@ export default function DesignTools({ manualSync, frontCanvas, backCanvas, initi
 }
 
 // ── Botón de herramienta ──────────────────────────────────
-function ToolBtn({ icon, label, onClick, className = "" }) {
+function ToolBtn({ icon, label, onClick, className = "", disabled = false }) {
   return (
-    <button onClick={onClick}
+    <button onClick={onClick} disabled={disabled}
       className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
                   text-xs font-bold uppercase tracking-wider transition-all duration-200
                   text-gray-300 hover:text-white border border-white/10 hover:border-white/30
-                  hover:bg-white/5 active:scale-95 ${className}`}>
+                  hover:bg-white/5 active:scale-95 disabled:cursor-wait disabled:opacity-50 ${className}`}>
       <span className="material-symbols-outlined text-[16px]">{icon}</span>
       {label}
     </button>
   );
+}
+
+function optimizeImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("El archivo no contiene una imagen legible."));
+      image.onload = () => {
+        const ratio = Math.min(1, 1600 / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * ratio));
+        canvas.height = Math.max(1, Math.round(image.height * ratio));
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("No se pudo preparar la imagen."));
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL(file.type === "image/png" ? "image/png" : "image/jpeg", 0.88));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }

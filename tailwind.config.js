@@ -9,27 +9,26 @@ export default {
         display: ["Inter", "sans-serif"],
       },
       colors: {
-        // Paleta NEON-STITCH
-        primary:    "#00f2ff", // Cian neón
-        secondary:  "#ecb2ff", // Púrpura neón
-        tertiary:   "#bdec00", // Lima neón
-        background: "#0A0A0B",
-        surface:    "#131314",
-        surfaceHigh: "#1a1a1c",
+        primary:    "#75D4E1",
+        secondary:  "#9281D9",
+        tertiary:   "#D9A2C0",
+        background: "#FFFFFF",
+        surface:    "#FFFFFF",
+        surfaceHigh: "#F6F7FB",
       },
       backgroundImage: {
         "hero-glow":
-          "radial-gradient(ellipse 70% 45% at 50% -10%, rgba(0,242,255,0.12), transparent), radial-gradient(ellipse 40% 30% at 80% 30%, rgba(236,178,255,0.07), transparent)",
+          "radial-gradient(ellipse 70% 45% at 50% -10%, rgba(117,212,225,0.18), transparent), radial-gradient(ellipse 40% 30% at 80% 30%, rgba(146,129,217,0.12), transparent)",
         "card-gradient":
-          "linear-gradient(145deg, rgba(22,22,24,0.8) 0%, rgba(10,10,11,0.9) 100%)",
+          "linear-gradient(145deg, #FFFFFF 0%, #F6F7FB 100%)",
       },
       boxShadow: {
-        "neon-cyan":    "0 0 20px rgba(0,242,255,0.35), 0 0 60px rgba(0,242,255,0.10)",
-        "neon-cyan-sm": "0 0 10px rgba(0,242,255,0.25)",
-        "neon-purple":  "0 0 20px rgba(236,178,255,0.30)",
-        "neon-lime":    "0 0 20px rgba(189,236,0,0.30)",
-        "glass":        "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
-        "card-hover":   "0 12px 40px rgba(0,0,0,0.7), 0 0 20px rgba(0,242,255,0.12)",
+        "neon-cyan":    "0 4px 16px rgba(66,170,191,0.12)",
+        "neon-cyan-sm": "0 2px 8px rgba(66,170,191,0.12)",
+        "neon-purple":  "0 4px 16px rgba(125,103,198,0.10)",
+        "neon-lime":    "0 4px 16px rgba(66,170,191,0.12)",
+        "glass":        "0 4px 16px rgba(31,41,55,0.06)",
+        "card-hover":   "0 8px 24px rgba(31,41,55,0.10)",
       },
       animation: {
         "fade-up":          "fadeUp 0.6s ease forwards",
@@ -50,8 +49,8 @@ export default {
           to:   { opacity: "1" },
         },
         glowPulseCyan: {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(0,242,255,0.25)" },
-          "50%":       { boxShadow: "0 0 50px rgba(0,242,255,0.55), 0 0 100px rgba(0,242,255,0.15)" },
+          "0%, 100%": { boxShadow: "0 4px 14px rgba(66,170,191,0.10)" },
+          "50%":       { boxShadow: "0 6px 20px rgba(125,103,198,0.16)" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0px)" },

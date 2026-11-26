@@ -33,7 +33,7 @@ function getAIResponse(input) {
     return {
       type: "text",
       message:
-        "**Guía de talles NEON-STITCH:**\n\n" +
+        "**Guía de talles ANATHEL Design:**\n\n" +
         "• **XS** → hasta 60kg / talle 36-38\n" +
         "• **S** → 60-70kg / talle 38-40\n" +
         "• **M** → 70-80kg / talle 40-42\n" +
@@ -48,7 +48,7 @@ function getAIResponse(input) {
     return {
       type: "text",
       message:
-        "**Envíos NEON-STITCH:**\n\n" +
+        "**Envíos ANATHEL Design:**\n\n" +
         "• CABA y GBA → 1-2 días hábiles\n" +
         "• Interior → 3-5 días hábiles\n" +
         "• Envío gratis en compras +$30.000\n\n" +
@@ -73,7 +73,7 @@ function getAIResponse(input) {
     return {
       type: "text",
       message:
-        "**Bienvenido a NEON-STITCH** 👾\n\n" +
+        "**Bienvenido a ANATHEL Design**\n\n" +
         "Soy tu asistente de estilo IA. Puedo ayudarte con:\n\n" +
         "• **Recomendaciones** por estilo\n" +
         "• **Talles** y medidas\n" +
@@ -176,7 +176,7 @@ export default function AIAssistant() {
   const [messages, setMessages] = useState([
     {
       role: "ai",
-      content: "**Bienvenido a NEON-STITCH** 👾\n¿Te ayudo a encontrar tu prenda ideal?",
+      content: "**Bienvenido a ANATHEL Design**\n¿Te ayudo a encontrar tu prenda ideal?",
       products: [],
     },
   ]);
@@ -271,7 +271,7 @@ export default function AIAssistant() {
                 AI
               </div>
               <div>
-                <p className="text-sm font-black tracking-tight">Asistente NEON-STITCH</p>
+                <p className="text-sm font-black tracking-tight">Asistente ANATHEL</p>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   <span className="text-[10px] text-gray-600 font-bold">En línea</span>

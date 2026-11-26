@@ -69,44 +69,44 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-20 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-4 py-16 sm:px-6 sm:py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
 
           {/* ── Copy ── */}
           <motion.div variants={stagger} initial="hidden" animate="show"
-            className="flex flex-col items-start">
+            className="flex min-w-0 flex-col items-start">
 
             <motion.div variants={fadeIn} className="mb-6">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full
-                               border border-primary/30 text-primary text-[11px] font-black
-                               uppercase tracking-[0.3em] glass-panel">
+              <span className="inline-flex max-w-full items-center gap-2 rounded-full border
+                               border-primary/30 px-3 py-1.5 text-[9px] font-black uppercase
+                               tracking-[0.12em] text-primary glass-panel sm:px-4 sm:text-[11px]
+                               sm:tracking-[0.3em]">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                Colección Génesis 2026
+                ANATHEL Design · Estudio creativo
               </span>
             </motion.div>
 
             <motion.h1 variants={fadeUp}
-              className="text-6xl md:text-7xl xl:text-8xl font-black uppercase leading-none tracking-tight">
-              Diseñá tu<br />
-              <span className="text-primary">remera</span><br />
-              en 3D
+              className="w-full break-words text-[clamp(2rem,4.5vw,4.5rem)] font-black uppercase leading-none tracking-tight">
+              Tu creatividad.<br />
+              <span className="text-gradient-holo">Sin límites.</span>
             </motion.h1>
 
             <motion.p variants={fadeUp}
-              className="text-gray-400 max-w-md mt-6 text-lg leading-relaxed">
-              Personalizá cada detalle. Usá el editor 3D interactivo, el banco de imágenes y la IA para crear la remera exacta que imaginás.
+              className="mt-6 max-w-md text-base leading-relaxed text-slate-600 sm:text-lg">
+              Diseñá y personalizá prendas con herramientas 2D y 3D, recursos creativos y medidas de impresión a la vista.
             </motion.p>
 
             {/* Stats */}
-            <motion.div variants={fadeUp} className="flex items-center gap-8 mt-8">
+            <motion.div variants={fadeUp} className="mt-8 flex w-full flex-wrap items-center gap-x-5 gap-y-3 sm:gap-x-8">
               {[
-                { value: "500+", label: "Clientes" },
-                { value: "514",  label: "Diseños" },
-                { value: "48hs", label: "Envío" },
+                { value: "2D", label: "Diseño editable" },
+                { value: "3D", label: "Vista interactiva" },
+                { value: "CM", label: "Medidas visibles" },
               ].map(stat => (
                 <div key={stat.label} className="text-center">
-                  <p className="text-2xl font-black text-primary">{stat.value}</p>
-                  <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wider mt-0.5">
+                  <p className="text-2xl font-black text-gradient-holo">{stat.value}</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
                     {stat.label}
                   </p>
                 </div>
@@ -114,36 +114,22 @@ export default function Hero() {
             </motion.div>
 
             {/* CTAs */}
-            <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mt-10">
-              <Link to="/register" className="btn-primary text-sm px-8 py-4">
+            <motion.div variants={fadeUp} className="mt-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+              <Link to="/register" className="btn-primary w-full justify-center px-6 py-4 text-sm sm:w-auto sm:px-8">
                 <span className="material-symbols-outlined text-[20px]">person_add</span>
-                Empezar gratis
+                Crear cuenta
               </Link>
-              <Link to="/login" className="btn-outline text-sm px-8 py-4">
+              <Link to="/login" className="btn-outline w-full justify-center px-6 py-4 text-sm sm:w-auto sm:px-8">
                 <span className="material-symbols-outlined text-[20px]">login</span>
-                Ya tengo cuenta
+                Iniciar sesión
               </Link>
             </motion.div>
 
-            {/* Social proof */}
-            <motion.div variants={fadeUp} className="flex items-center gap-3 mt-8">
-              <div className="flex -space-x-2">
-                {["1521572163474-6864f9cf17ab","1503341455253-b2e723bb3dbb","1618354691373-d851c5c3a990"].map((id,i) => (
-                  <img key={i}
-                    src={`https://images.unsplash.com/photo-${id}?w=40&h=40&fit=crop&crop=face`}
-                    alt="" className="w-8 h-8 rounded-full border-2 border-background object-cover" />
-                ))}
-              </div>
-              <div>
-                <div className="flex gap-0.5">
-                  {Array.from({length:5}).map((_,i) => (
-                    <svg key={i} className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-[10px] text-gray-500 mt-0.5">+500 clientes satisfechos</p>
-              </div>
+            <motion.div variants={fadeUp} className="mt-8 border-l-2 border-secondary pl-4">
+              <p className="text-xs font-bold tracking-wide text-slate-600">
+                ANATHEL Design <span className="mx-1 text-slate-300">/</span> Creado por RichardG91
+              </p>
+              <p className="mt-1 text-xs text-slate-500">Una idea propia, hecha para crear sin límites.</p>
             </motion.div>
           </motion.div>
 
@@ -167,8 +153,8 @@ export default function Hero() {
               transition={{ delay: 1 }}
               className="absolute top-8 right-4 glass-panel-accent rounded-2xl px-4 py-3 max-w-[160px]"
             >
-              <p className="text-[10px] font-black text-primary uppercase tracking-widest">Design Studio</p>
-              <p className="text-xs font-bold text-white mt-1">Editor 3D en tiempo real</p>
+              <p className="text-[10px] font-black text-primary uppercase tracking-widest">ANATHEL Studio</p>
+              <p className="text-xs font-bold text-slate-800 mt-1">Editor 3D interactivo</p>
             </motion.div>
 
             <motion.div
@@ -178,7 +164,7 @@ export default function Hero() {
               className="absolute bottom-8 left-4 glass-panel-accent rounded-2xl px-4 py-3"
             >
               <p className="text-[10px] font-black text-secondary uppercase tracking-widest">IA Integrada</p>
-              <p className="text-xs font-bold text-white mt-1">Diseño por inteligencia artificial</p>
+              <p className="text-xs font-bold text-slate-800 mt-1">Asistencia creativa integrada</p>
             </motion.div>
           </motion.div>
         </div>

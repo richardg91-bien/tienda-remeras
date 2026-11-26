@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-// NEON-STITCH v1.1
 import { lazy, Suspense } from "react";
+import { MotionConfig } from "framer-motion";
 import { CartProvider }    from "./context/CartContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar              from "./components/Navbar";
+import Footer              from "./components/Footer.jsx";
 import Cart                from "./components/Cart";
 import AIAssistant         from "./components/AIAssistant";
 import ProtectedRoute      from "./components/ProtectedRoute";
@@ -23,7 +24,7 @@ function DesignerFallback() {
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         <p className="text-zinc-500 text-xs font-black uppercase tracking-widest">
-          Cargando Design Studio...
+          Cargando ANATHEL Studio...
         </p>
       </div>
     </div>
@@ -45,8 +46,9 @@ function AuthenticatedGlobals() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
+      <MotionConfig reducedMotion="user">
+        <AuthProvider>
+          <CartProvider>
 
           {/* Navbar global — muestra avatar/sesión si está logueado */}
           <Navbar />
@@ -79,11 +81,14 @@ export default function App() {
             <Route path="*" element={<Home />} />
           </Routes>
 
+          <Footer />
+
           {/* Globales — solo visibles si está autenticado */}
           <AuthenticatedGlobals />
 
-        </CartProvider>
-      </AuthProvider>
+          </CartProvider>
+        </AuthProvider>
+      </MotionConfig>
     </BrowserRouter>
   );
 }

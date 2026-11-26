@@ -18,15 +18,16 @@ function HeroTshirt() {
 
 export default function Hero3D() {
   return (
-    <Canvas camera={{ position: [0, 0, 5], fov: 45 }} className="rounded-3xl">
+    <Canvas camera={{ position: [0, 0, 24], fov: 45 }} className="rounded-3xl">
       <ambientLight intensity={0.7} />
       <directionalLight position={[5, 5, 5]} intensity={1.2} />
       <directionalLight position={[-5, 2, -3]} intensity={0.4} color="#8b9dc3" />
-      <pointLight position={[-5, -5, -5]} color="#00f2ff" intensity={0.6} />
+      <pointLight position={[-5, -5, -5]} color="#dff4f7" intensity={0.6} />
       <Suspense fallback={null}>
         <HeroTshirt />
       </Suspense>
       <OrbitControls
+        target={[3, 0, 0]}
         enableZoom={false}
         enablePan={false}
         autoRotate

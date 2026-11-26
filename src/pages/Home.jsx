@@ -7,6 +7,7 @@ import Products from "../components/Products";
 import StyleQuiz from "../components/StyleQuiz";
 import { useAuth } from "../context/AuthContext";
 import { products, formatPrice } from "../data/products";
+import BrandMark from "../components/BrandMark.jsx";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
@@ -21,32 +22,32 @@ const stagger = {
 // ── Sección de Features ──────────────────────────────────────────────────────
 const features = [
   {
-    icon: "psychology",
+    icon: "design_services",
     color: "text-secondary",
-    label: "Materiales Avanzados",
-    title: "Tejidos Reactivos",
-    desc: "Textiles inteligentes que regulan la temperatura y responden a estímulos lumínicos.",
+    label: "Lienzo editable",
+    title: "Diseñá en 2D",
+    desc: "Sumá imágenes y textos, y ajustá cada elemento sobre el área de trabajo.",
   },
   {
-    icon: "auto_awesome",
+    icon: "view_in_ar",
     color: "text-primary",
-    label: "Corte Generativo",
-    title: "Patrones por IA",
-    desc: "Cortes calculados algorítmicamente para un ajuste ergonómico perfecto en cualquier cuerpo.",
+    label: "Vista interactiva",
+    title: "Explorá en 3D",
+    desc: "Rotá y acercá el producto para revisar tu propuesta desde distintos ángulos.",
   },
   {
-    icon: "speed",
+    icon: "photo_library",
     color: "text-tertiary",
-    label: "Envío Rápido",
-    title: "48hs en CABA",
-    desc: "Logística optimizada. Tu prenda llega antes de que el hype se enfríe.",
+    label: "Recursos creativos",
+    title: "Reutilizá tus ideas",
+    desc: "Explorá la biblioteca y retomá tus proyectos guardados desde el diseñador.",
   },
   {
-    icon: "verified",
+    icon: "straighten",
     color: "text-primary",
-    label: "Calidad Garantizada",
-    title: "Control Total",
-    desc: "Cada prenda pasa por inspección de calidad antes de salir del depósito.",
+    label: "Referencia visual",
+    title: "Medidas a la vista",
+    desc: "Consultá guías de impresión orientativas sin convertirlas en límites del diseño.",
   },
 ];
 
@@ -84,7 +85,7 @@ export default function Home() {
   const ctaLink = isAuthenticated ? "/catalogo" : "/register";
 
   return (
-    <div className="bg-background text-white min-h-screen">
+    <div className="bg-background text-slate-800 min-h-screen">
 
       {/* ── Hero ── */}
       <Hero />
@@ -102,7 +103,7 @@ export default function Home() {
             Tecnología
           </motion.p>
           <motion.h2 variants={fadeUp} className="section-title neon-border-left">
-            Precisión Algorítmica
+            Diseñá a tu manera
           </motion.h2>
         </motion.div>
 
@@ -358,21 +359,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/6 px-6 py-12 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      <section id="about" className="px-5 py-16 sm:px-8 md:py-20">
+        <div className="glass-panel-accent mx-auto grid max-w-7xl items-center gap-8 rounded-[2rem] p-6 sm:p-10 md:grid-cols-[1fr_auto] md:p-14">
           <div>
-            <p className="text-2xl font-black italic text-primary tracking-tighter">NEON-STITCH</p>
-            <p className="text-gray-600 text-xs mt-1">Diseño por IA, Estilo Humano.</p>
+            <p className="section-label mb-3">Sobre nosotros</p>
+            <h2 className="section-title mb-4">
+              Una creación<br />
+              <span className="text-gradient-holo">de RichardG91</span>
+            </h2>
+            <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+              ANATHEL Design es un espacio independiente para imaginar y personalizar prendas.
+              Reúne herramientas de diseño, recursos y vistas interactivas para que cada persona
+              pueda llevar una idea a su propio proyecto.
+            </p>
+            <p className="mt-5 font-semibold text-slate-700">Tu creatividad. Sin límites.</p>
           </div>
-          <div className="flex items-center gap-6 text-xs text-gray-600 font-bold uppercase tracking-wider">
-            <Link to="/" className="hover:text-primary transition-colors">Inicio</Link>
-            <Link to="/catalogo" className="hover:text-primary transition-colors">Catálogo</Link>
-            <a href="#info" className="hover:text-primary transition-colors">Info</a>
+          <div className="flex justify-start md:justify-center">
+            <BrandMark />
           </div>
-          <p className="text-gray-700 text-xs">© 2026 NEON-STITCH. Todos los derechos reservados.</p>
         </div>
-      </footer>
+      </section>
 
       {/* ── Modal Quiz ── */}
       <AnimatePresence>

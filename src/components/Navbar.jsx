@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { prefetchStudio } from "../lib/prefetchStudio";
+import BrandMark from "./BrandMark.jsx";
 
 export default function Navbar() {
   const [scrolled, setScrolled]   = useState(false);
@@ -48,45 +49,55 @@ export default function Navbar() {
     <>
       {/* ── Top header ── */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6
+        className={`fixed inset-x-0 top-0 z-50 h-16 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8
                     transition-all duration-300 ${
                       scrolled
-                        ? "bg-background/80 backdrop-blur-2xl border-b border-white/10"
-                        : "bg-transparent"
+                        ? "bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-sm"
+                        : "bg-white/85 backdrop-blur-lg border-b border-slate-100"
                     }`}
       >
-        {/* Menú / ícono izquierda */}
-        <Link to="/" className="text-primary" aria-label="Inicio">
-          <span className="material-symbols-outlined text-[26px]">menu</span>
+        <Link to="/" className="shrink-0" aria-label="ANATHEL Design, inicio">
+          <BrandMark compact />
         </Link>
 
-        {/* Brand centrado */}
-        <Link
-          to="/"
-          className="absolute left-1/2 -translate-x-1/2 text-2xl font-black tracking-tighter
-                     text-primary italic hover:opacity-80 transition-opacity select-none"
-        >
-          NEON-STITCH
-        </Link>
+        <nav aria-label="Navegación principal" className="hidden items-center gap-5 lg:flex">
+          {[
+            { to: "/", label: "Inicio" },
+            { to: "/catalogo", label: "Catálogo" },
+            { to: "/galeria", label: "Galería" },
+            { to: "/#about", label: "Sobre nosotros" },
+          ].map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`text-xs font-bold transition-colors ${
+                (to === "/" ? location.pathname === "/" : to === "/#about"
+                  ? location.pathname === "/" && location.hash === "#about"
+                  : location.pathname === to)
+                  ? "text-violet-700"
+                  : "text-slate-600 hover:text-violet-700"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
 
-        {/* Link Studio — solo desktop, junto al brand */}
-        <Link
-          to="/disenar"
-          onMouseEnter={prefetchStudio}
-          onFocus={prefetchStudio}
-          className={`hidden md:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2
-                      ml-48 text-xs font-black uppercase tracking-wider transition-colors
-                      px-3 py-1.5 rounded-full ${
-                        location.pathname === "/disenar"
-                          ? "text-background bg-primary neon-glow-sm"
-                          : "text-gray-500 hover:text-primary glass-panel border border-white/10"
-                      }`}
-        >
-          <span className="material-symbols-outlined text-[14px]">design_services</span>
-          Studio
-        </Link>
         {/* Acciones derecha */}
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <Link
+            to="/disenar"
+            onMouseEnter={prefetchStudio}
+            onFocus={prefetchStudio}
+            className={`hidden md:flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-black uppercase tracking-wider transition-colors ${
+              location.pathname === "/disenar"
+                ? "bg-primary text-background neon-glow-sm"
+                : "border border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:text-violet-700"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[15px]">design_services</span>
+            Diseñador
+          </Link>
 
           {/* Carrito */}
           <button
@@ -128,7 +139,7 @@ export default function Navbar() {
                     </span>
                   </div>
                 )}
-                <span className="hidden md:block text-xs font-bold text-white max-w-[80px] truncate">
+                <span className="hidden md:block text-xs font-bold text-slate-800 max-w-[80px] truncate">
                   {user?.first_name}
                 </span>
                 <span className="material-symbols-outlined text-gray-500 text-[16px]">
@@ -144,8 +155,8 @@ export default function Navbar() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -8 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-48 glass-panel rounded-2xl
-                               overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+                    className="absolute right-0 top-full mt-2 w-52 glass-panel rounded-2xl
+                               overflow-hidden shadow-lg shadow-slate-900/10"
                   >
                     {/* Header del menú */}
                     <div className="px-4 py-3 border-b border-white/8">
@@ -160,7 +171,7 @@ export default function Navbar() {
                       <Link
                         to="/perfil"
                         className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold
-                                   text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                   text-slate-700 hover:text-violet-700 hover:bg-slate-50 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[16px] text-primary">person</span>
                         Mi perfil
@@ -169,7 +180,7 @@ export default function Navbar() {
                         to="/perfil"
                         onClick={() => setTimeout(() => {}, 0)}
                         className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold
-                                   text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                   text-slate-700 hover:text-violet-700 hover:bg-slate-50 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[16px] text-secondary">shopping_bag</span>
                         Mis órdenes
@@ -177,7 +188,7 @@ export default function Navbar() {
                       <Link
                         to="/galeria"
                         className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold
-                                   text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                   text-slate-700 hover:text-violet-700 hover:bg-slate-50 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[16px] text-tertiary">photo_library</span>
                         Galería
@@ -185,7 +196,7 @@ export default function Navbar() {
                       <Link
                         to="/catalogo"
                         className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold
-                                   text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                   text-slate-700 hover:text-violet-700 hover:bg-slate-50 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[16px] text-tertiary">storefront</span>
                         Catálogo
@@ -228,28 +239,13 @@ export default function Navbar() {
       {/* ── Bottom nav mobile ── */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 h-20 bg-surface/80 backdrop-blur-2xl
-                   border-t border-white/10 flex justify-around items-center px-4 md:hidden"
+                   border-t border-slate-200 shadow-[0_-8px_24px_rgba(37,38,51,0.06)] flex justify-around items-center px-2 sm:px-4 md:hidden"
         role="navigation"
       >
         <BottomNavItem to="/"          icon="storefront"        label="Tienda"   active={location.pathname === "/"} />
         <BottomNavItem to="/catalogo"  icon="auto_awesome"      label="Catálogo" active={location.pathname === "/catalogo"} />
         <BottomNavItem to="/galeria"   icon="photo_library"     label="Galería"  active={location.pathname === "/galeria"} />
         <BottomNavItem to="/disenar" icon="design_services" label="Studio" active={location.pathname === "/disenar"} onMouseEnter={prefetchStudio} />
-
-        {/* Carrito — botón especial */}
-        <button
-          onClick={toggleCart}
-          className="flex flex-col items-center text-gray-500 hover:text-primary transition-colors relative"
-        >
-          <span className="material-symbols-outlined text-[24px]">shopping_cart</span>
-          <span className="text-[10px] uppercase font-black mt-0.5 tracking-wider">Carrito</span>
-          {totalItems > 0 && (
-            <span className="absolute -top-1 left-1/2 translate-x-1 w-4 h-4 bg-primary text-background
-                             text-[9px] font-black rounded-full flex items-center justify-center">
-              {totalItems}
-            </span>
-          )}
-        </button>
 
         {/* Perfil / Login */}
         {isAuthenticated ? (

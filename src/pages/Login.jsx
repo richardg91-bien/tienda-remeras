@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import BrandMark from "../components/BrandMark.jsx";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -54,8 +55,8 @@ export default function Login() {
       >
         {/* Header */}
         <motion.div variants={fadeUp} className="text-center mb-8">
-          <Link to="/" className="inline-block text-2xl font-black italic text-primary tracking-tighter mb-6">
-            NEON-STITCH
+          <Link to="/" className="mb-6 inline-flex">
+            <BrandMark />
           </Link>
           <h1 className="text-3xl font-black uppercase">Iniciá sesión</h1>
           <p className="text-gray-500 text-sm mt-2">Accedé a tu cuenta para continuar</p>

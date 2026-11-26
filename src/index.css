@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --anathel-graphite: #252633;
+  --anathel-cyan: #3aaec2;
+  --anathel-violet: #7866c2;
+  --anathel-rose: #bd779d;
+  --anathel-border: #e4e6ee;
+}
+
 /* ── Base ────────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
@@ -13,66 +21,59 @@
   }
 
   body {
-    background-color: #0A0A0B;
-    color: #e5e2e3;
+    background-color: #fff;
+    color: var(--anathel-graphite);
     font-family: 'Inter', sans-serif;
   }
 
   ::selection {
-    background-color: rgba(0, 242, 255, 0.25);
-    color: #fff;
+    background-color: rgba(146, 129, 217, 0.24);
+    color: var(--anathel-graphite);
   }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: #0A0A0B; }
-  ::-webkit-scrollbar-thumb { background: #2a2a2e; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
+  ::-webkit-scrollbar-track { background: #f6f7fb; }
+  ::-webkit-scrollbar-thumb { background: #c6cbd6; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9281d9; }
 }
 
 /* ── Componentes ────────────────────────────────────── */
 @layer components {
 
-  /* Glass panel — card semitransparente con blur */
+  /* Superficie blanca para cards y paneles */
   .glass-panel {
-    background: rgba(19, 19, 20, 0.65);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #fff;
+    border: 1px solid var(--anathel-border);
+    box-shadow: 0 4px 16px rgba(38, 40, 57, 0.06);
   }
 
-  /* Glass panel con borde cyan */
+  /* Superficie destacada con brillo holográfico sutil */
   .glass-panel-accent {
-    background: rgba(19, 19, 20, 0.65);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 242, 255, 0.2);
-    box-shadow: 0 0 20px rgba(0, 242, 255, 0.06);
+    background: linear-gradient(135deg, #fff 64%, rgba(117, 212, 225, 0.09), rgba(146, 129, 217, 0.08));
+    border: 1px solid rgba(146, 129, 217, 0.32);
+    box-shadow: 0 8px 26px rgba(76, 80, 112, 0.08);
   }
 
-  /* Neon glow (cyan) */
-  .neon-glow {
-    box-shadow: 0 0 20px rgba(0, 242, 255, 0.35), 0 0 60px rgba(0, 242, 255, 0.10);
-  }
-  .neon-glow-sm {
-    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
-  }
+  .neon-glow { box-shadow: 0 4px 16px rgba(66, 170, 191, 0.14); }
+  .neon-glow-sm { box-shadow: 0 2px 8px rgba(125, 103, 198, 0.12); }
 
-  /* Botón primario — cyan neón */
+  /* Botón primario */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
-           bg-primary text-background font-extrabold uppercase tracking-widest
+           bg-primary text-gray-900 font-extrabold uppercase tracking-widest
            px-8 py-3.5 rounded-full
            transition-all duration-200
            hover:scale-105 active:scale-95 neon-glow;
     font-size: 0.8rem;
     letter-spacing: 0.12em;
+    background-image: linear-gradient(105deg, #d9f2f5, #e5e0f7 58%, #f6e5ef);
   }
 
-  /* Botón outline — borde cyan */
+  /* Botón outline */
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2
-           border border-primary text-primary font-extrabold uppercase tracking-widest
+           border border-primary text-gray-900 font-extrabold uppercase tracking-widest
            px-8 py-3.5 rounded-full
            transition-all duration-200
            hover:bg-primary/10 active:scale-95;
@@ -80,16 +81,16 @@
     letter-spacing: 0.12em;
   }
 
-  /* Botón terciario — lima neón */
+  /* Botón terciario */
   .btn-tertiary {
     @apply inline-flex items-center justify-center gap-2
-           bg-tertiary text-background font-black uppercase tracking-widest
+           bg-tertiary text-gray-900 font-black uppercase tracking-widest
            px-6 py-3 rounded-xl
            transition-all duration-200
            hover:scale-[1.02] active:scale-95;
     font-size: 0.8rem;
     letter-spacing: 0.1em;
-    box-shadow: 0 0 18px rgba(189, 236, 0, 0.25);
+    box-shadow: 0 3px 12px rgba(125, 103, 198, 0.12);
   }
 
   /* Badge/etiqueta */
@@ -97,8 +98,8 @@
     @apply text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider;
   }
   .badge-cyan    { @apply badge bg-primary/20 text-primary border border-primary/30; }
-  .badge-purple  { @apply badge bg-secondary/20 text-secondary border border-secondary/30; }
-  .badge-lime    { @apply badge bg-tertiary/20 text-tertiary border border-tertiary/30; }
+  .badge-purple  { @apply badge bg-secondary/15 text-secondary border border-secondary/30; }
+  .badge-lime    { @apply badge bg-tertiary/15 text-tertiary border border-tertiary/30; }
   .badge-solid   { @apply badge bg-secondary text-background; }
 
   /* Label de sección */
@@ -111,12 +112,13 @@
     @apply text-4xl md:text-5xl font-black uppercase leading-tight;
   }
 
-  /* Input oscuro */
+  /* Input claro */
   .input-dark {
-    @apply w-full bg-surface border border-white/10 rounded-xl
-           px-4 py-3 text-white placeholder-gray-600
+    @apply w-full bg-surface border border-slate-200 rounded-xl
+           px-4 py-3 text-slate-800 placeholder-gray-500
            focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20
            transition-colors duration-200 text-sm;
+    background-color: #fbfcfe;
   }
 
   /* Card de producto */
@@ -127,43 +129,58 @@
            hover:-translate-y-1;
   }
 
-  /* Línea decorativa neón izquierda */
+  /* Línea decorativa holográfica */
   .neon-border-left {
     @apply border-l-4 border-primary pl-4;
+  }
+
+  .brand-footer {
+    border-top: 1px solid var(--anathel-border);
+    background: linear-gradient(180deg, #fff 0%, #fafbfe 100%);
   }
 }
 
 /* ── Utilidades ─────────────────────────────────────── */
 @layer utilities {
 
-  /* Texto gradiente cyan→purple */
-  .text-gradient-neon {
-    background: linear-gradient(90deg, #00f2ff, #ecb2ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  /* Tipografía de acento */
+  .text-gradient-neon,
+  .text-gradient-lime,
+  .text-gradient-holo {
+    background: linear-gradient(105deg, #269eb5 0%, #7060bf 52%, #bd779d 100%);
     background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
   }
 
-  /* Texto gradiente cyan→lime */
-  .text-gradient-lime {
-    background: linear-gradient(90deg, #00f2ff, #bdec00);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .anathel-wordmark {
+    background: linear-gradient(105deg, #53616f 0%, #279bb0 36%, #7561c4 68%, #b97098 100%);
     background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    font-weight: 900;
+    letter-spacing: -0.07em;
+  }
+
+  .creator-signature {
+    background: linear-gradient(100deg, #59636f 0%, #329bad 44%, #7b68c7 76%, #a9658c 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
   }
 
   /* Fondo con grid de puntos sutil */
   .bg-dots {
-    background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(120,102,194,0.08) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 
   /* Fondo con grid de líneas sutil */
   .bg-grid {
     background-image:
-      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
+      linear-gradient(rgba(58,174,194,0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,102,194,0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
 
   /* Ocultar scrollbar manteniendo funcionalidad */
@@ -184,8 +201,90 @@
     position: absolute;
     inset-inline: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(0,242,255,0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(58,174,194,0.35), rgba(120,102,194,0.35), transparent);
     animation: scanLine 4s linear infinite;
     pointer-events: none;
+  }
+}
+
+/* Ajustes para utilidades preexistentes mientras las páginas migran al tema común. */
+.text-white,
+[class~="text-background"] {
+  color: var(--anathel-graphite) !important;
+}
+
+.text-gray-100,
+.text-gray-200,
+.text-gray-300 {
+  color: #4a5060 !important;
+}
+
+.text-gray-400 {
+  color: #596171 !important;
+}
+
+.text-primary {
+  color: var(--anathel-cyan) !important;
+}
+
+.text-secondary {
+  color: var(--anathel-violet) !important;
+}
+
+.text-tertiary {
+  color: var(--anathel-rose) !important;
+}
+
+.bg-primary,
+.bg-secondary,
+.bg-tertiary {
+  color: var(--anathel-graphite);
+}
+
+[class~="bg-zinc-950"],
+[class~="bg-zinc-950/95"],
+[class~="bg-zinc-900"],
+[class~="bg-zinc-900/60"],
+[class~="bg-zinc-800"] {
+  background-color: #fff !important;
+}
+
+[class~="bg-white/5"],
+[class~="bg-white/10"],
+[class~="bg-white/20"] {
+  background-color: #f4f5f9 !important;
+}
+
+[class~="border-white/8"],
+[class~="border-white/10"],
+[class~="border-white/15"],
+[class~="border-white/20"] {
+  border-color: var(--anathel-border) !important;
+}
+
+[class~="border-zinc-800"],
+[class~="border-zinc-900"] {
+  border-color: var(--anathel-border) !important;
+}
+
+[class~="bg-background/80"],
+[class~="bg-surface/80"],
+[class~="bg-surface/60"],
+[class~="bg-surface/40"] {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

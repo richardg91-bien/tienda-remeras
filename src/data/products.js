@@ -1,5 +1,5 @@
 /**
- * Catálogo NEON-STITCH
+ * Catálogo ANATHEL Design
  * Categorías: Génesis | Cyberpunk | Minimalista | Premium
  */
 

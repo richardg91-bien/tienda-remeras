@@ -132,7 +132,7 @@ function CartContent({
 
           <button onClick={checkoutMP}
             className="w-full py-3.5 rounded-2xl font-black text-sm uppercase tracking-wider
-                       bg-[#009ee3] hover:bg-[#0087c8] text-white
+                       bg-[#eaf1f7] hover:bg-[#dde9f1] text-gray-900
                        flex items-center justify-center gap-2
                        transition-all duration-200 hover:scale-[1.02] active:scale-95
                        shadow-[0_4px_20px_rgba(0,158,227,0.25)]">
@@ -144,7 +144,7 @@ function CartContent({
 
           <button onClick={checkoutWhatsApp}
             className="w-full py-3 rounded-2xl font-black text-sm uppercase tracking-wider
-                       bg-[#25d366] hover:bg-[#20bc5a] text-white
+                       bg-[#edf5e6] hover:bg-[#e1edd4] text-gray-900
                        flex items-center justify-center gap-2
                        transition-all duration-200 hover:scale-[1.02] active:scale-95">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -228,7 +228,7 @@ export default function Cart() {
             transition={{ type:"spring", damping:28, stiffness:280 }}
             className="hidden md:flex fixed top-0 right-0 w-full max-w-md
                        bg-background border-l border-white/8 flex-col h-full
-                       shadow-[-8px_0_60px_rgba(0,0,0,0.8)]"
+                       shadow-[-4px_0_24px_rgba(31,41,55,0.12)]"
             style={{ zIndex: 10001, isolation: "isolate" }}
             role="dialog" aria-label="Carrito de compras"
           >
@@ -260,7 +260,7 @@ export default function Cart() {
             }}
             className="md:hidden fixed bottom-0 left-0 right-0
                        bg-background border-t border-white/10 rounded-t-3xl
-                       flex flex-col shadow-[0_-8px_40px_rgba(0,0,0,0.7)]"
+                       flex flex-col shadow-[0_-4px_24px_rgba(31,41,55,0.12)]"
             style={{ maxHeight:"90dvh", zIndex: 10001, isolation: "isolate" }}
             role="dialog" aria-label="Carrito de compras"
           >

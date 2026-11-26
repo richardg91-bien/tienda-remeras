@@ -4,10 +4,19 @@ import * as fabric from "fabric";
 import { CANVAS_CONFIG } from "../constants/designConstants.js";
 import { useCanvas } from "./useCanvas.jsx";
 import canvasStorageManager from "../utils/canvasStorageManager.js";
+import { hydrateProjectCanvas } from "../utils/designerApi.js";
+import { adaptCanvasToSurface } from "../utils/surfaceUtils.js";
 
-export const useTshirtCanvas = ({ view }) => {
+export const useTshirtCanvas = ({
+  view,
+  productRef = "tee-classic",
+  surfaceId = view,
+  width = CANVAS_CONFIG.width,
+  height = CANVAS_CONFIG.height,
+  initialDesign,
+  onLoadError,
+}) => {
   const canvasRef  = useRef(null);
-  const fabricRef  = useRef(null);
   const tshirtColor = useSelector((state) => state.designer.tshirtColor);
   const { setFrontCanvas, setBackCanvas, setSelectedObject } = useCanvas();
 
@@ -15,41 +24,58 @@ export const useTshirtCanvas = ({ view }) => {
     if (!canvasRef.current) return;
 
     const canvas = new fabric.Canvas(canvasRef.current, {
-      width:           CANVAS_CONFIG.width,
-      height:          CANVAS_CONFIG.height,
+      width,
+      height,
       backgroundColor: CANVAS_CONFIG.backgroundColor,
       preserveObjectStacking: true,
     });
-
-    fabricRef.current = canvas;
 
     // Registra en el contexto
     if (view === "front") setFrontCanvas(canvas);
     else                  setBackCanvas(canvas);
 
-    // Carga objetos guardados en localStorage
-    const saved = canvasStorageManager.loadCanvasObjects(view);
-    if (saved.length > 0) {
-      canvas.loadFromJSON({ objects: saved }).then(() => canvas.renderAll());
-    }
+    let disposed = false;
+    const restore = async () => {
+      const saved = canvasStorageManager.loadProductCanvasObjects(productRef, surfaceId);
+      let copiedSource = false;
+      if (saved) {
+        await canvas.loadFromJSON(await hydrateProjectCanvas({ objects: saved }));
+      } else if (initialDesign?.json) {
+        const adapted = adaptCanvasToSurface(
+          initialDesign.json,
+          { width: initialDesign.width, height: initialDesign.height },
+          { width, height },
+        );
+        await canvas.loadFromJSON(await hydrateProjectCanvas(adapted));
+        copiedSource = true;
+      }
+      if (disposed) return;
+      canvas.renderAll();
 
-    // Selección de objetos
-    canvas.on("selection:created",  (e) => setSelectedObject(e.selected?.[0] || null));
-    canvas.on("selection:updated",  (e) => setSelectedObject(e.selected?.[0] || null));
-    canvas.on("selection:cleared",  ()  => setSelectedObject(null));
+      canvas.on("selection:created", (event) => setSelectedObject(event.selected?.[0] || null));
+      canvas.on("selection:updated", (event) => setSelectedObject(event.selected?.[0] || null));
+      canvas.on("selection:cleared", () => setSelectedObject(null));
 
-    // Guarda en localStorage al modificar
-    canvas.on("object:modified", () => canvasStorageManager.saveCanvasObjects(view, canvas));
-    canvas.on("object:added",    () => canvasStorageManager.saveCanvasObjects(view, canvas));
-    canvas.on("object:removed",  () => canvasStorageManager.saveCanvasObjects(view, canvas));
+      const save = () => canvasStorageManager.saveProductCanvasObjects(
+        productRef,
+        surfaceId,
+        canvas.getObjects().map((object) => object.toObject(["assetId", "privateAssetPath"])),
+      );
+      ["object:modified", "object:added", "object:removed"].forEach((event) => canvas.on(event, save));
+      if (copiedSource) save();
+    };
+    restore().catch((error) => {
+      if (!disposed) onLoadError?.(error);
+    });
 
     return () => {
+      disposed = true;
       canvas.dispose();
+      setSelectedObject(null);
       if (view === "front") setFrontCanvas(null);
       else                  setBackCanvas(null);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
+  }, [view, productRef, surfaceId, width, height, initialDesign, onLoadError, setBackCanvas, setFrontCanvas, setSelectedObject]);
 
   return { canvasRef, tshirtColor };
 };

@@ -50,7 +50,7 @@ export default function SizeSelectorModal({ frontCanvas, backCanvas }) {
 
       const customProduct = {
         id:            `custom-${Date.now()}`,
-        name:          "Remera Personalizada NEON-STITCH",
+        name:          "Prenda personalizada ANATHEL Design",
         price:         15000,
         originalPrice: null,
         category:      "Personalizada",
@@ -107,7 +107,7 @@ export default function SizeSelectorModal({ frontCanvas, backCanvas }) {
             className="fixed left-1/2 top-1/2
                        w-[calc(100vw-32px)] max-w-sm
                        bg-zinc-950 border border-white/10 rounded-3xl z-[10003]
-                       shadow-[0_20px_60px_rgba(0,0,0,0.8)]
+                       shadow-[0_12px_32px_rgba(31,41,55,0.16)]
                        flex flex-col overflow-hidden"
             style={{ maxHeight: "calc(100vh - 120px)" }}
           >

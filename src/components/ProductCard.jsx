@@ -55,10 +55,10 @@ export default function ProductCard({ product }) {
             <span className="badge bg-white/90 text-background">Best Seller</span>
           )}
           {discount && (
-            <span className="badge bg-red-500 text-white">-{discount}%</span>
+            <span className="badge border border-red-200 bg-red-50 text-red-700">-{discount}%</span>
           )}
           {product.stock <= 5 && (
-            <span className="badge bg-orange-500/90 text-white">Últimas</span>
+            <span className="badge border border-orange-200 bg-orange-50 text-orange-800">Últimas</span>
           )}
         </div>
 

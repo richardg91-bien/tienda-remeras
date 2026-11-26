@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import * as fabric from "fabric";
 import { useCanvas } from "../hooks/useCanvas.jsx";
 import { CANVAS_CONFIG } from "../constants/designConstants.js";
+import { getPrivateDesignAssetUrl, listPrivateDesignAssets } from "../utils/designerApi.js";
 
 const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -35,6 +36,7 @@ export default function AssetLibrary({ manualSync }) {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [view, setView]             = useState("menu");
+  const [scope, setScope]           = useState("shared");
 
   // Carga contadores
   useEffect(() => {
@@ -70,21 +72,48 @@ export default function AssetLibrary({ manualSync }) {
     }
   }, [category, search, page]);
 
-  useEffect(() => { fetchAssets(); }, [fetchAssets]); // eslint-disable-line react-hooks/set-state-in-effect
+  const fetchPrivateAssets = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const privateAssets = await listPrivateDesignAssets();
+      setAssets(privateAssets);
+      setTotalPages(1);
+      setTotalItems(privateAssets.length);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadAssets = scope === "private" ? fetchPrivateAssets : fetchAssets;
+  useEffect(() => { loadAssets(); }, [loadAssets]);
   useEffect(() => { setPage(1); }, [category, search]); // eslint-disable-line react-hooks/set-state-in-effect
 
   const selectCategory = (cat) => {
+    setScope("shared");
     setCategory(cat);
+    setView("grid");
+  };
+
+  const selectPrivateAssets = () => {
+    setScope("private");
+    setCategory("");
+    setSearch("");
+    setPage(1);
     setView("grid");
   };
 
   // Agrega imagen al canvas 2D de Fabric.js
   const addToCanvas = async (asset) => {
     const target = canvasToUse; // captura el valor actual en este render
+    const assetKey = asset.path || asset.id;
     if (!target || adding) return;
-    setAdding(asset.id);
+    setAdding(assetKey);
     try {
-      const img   = await fabric.Image.fromURL(asset.url, { crossOrigin: "anonymous" });
+      const source = asset.path ? await getPrivateDesignAssetUrl(asset.path) : asset.url;
+      const img   = await fabric.Image.fromURL(source, { crossOrigin: "anonymous" });
       const maxW  = CANVAS_CONFIG.width  * 0.4;
       const maxH  = CANVAS_CONFIG.height * 0.4;
       const scale = Math.min(maxW / img.width, maxH / img.height);
@@ -92,6 +121,8 @@ export default function AssetLibrary({ manualSync }) {
       img.set({
         left: (target.width  - img.getScaledWidth())  / 2,
         top:  (target.height - img.getScaledHeight()) / 2,
+        ...(!asset.path && asset.id ? { assetId: asset.id } : {}),
+        ...(asset.path ? { privateAssetPath: asset.path } : {}),
       });
       target.add(img);
       target.setActiveObject(img);
@@ -99,8 +130,8 @@ export default function AssetLibrary({ manualSync }) {
       // Pequeño delay para que Fabric termine antes de sincronizar con el 3D
       await new Promise(r => setTimeout(r, 80));
       manualSync?.();
-    } catch {
-      setError("No se pudo cargar la imagen en el canvas.");
+    } catch (err) {
+      setError(err.message || "No se pudo cargar la imagen en el canvas.");
     } finally {
       setAdding(null);
     }
@@ -141,6 +172,23 @@ export default function AssetLibrary({ manualSync }) {
               </div>
             </button>
           ))}
+          {localStorage.getItem("accessToken") && (
+            <button onClick={selectPrivateAssets}
+              className="flex items-center gap-3 p-3 rounded-2xl border border-white/8
+                         hover:border-primary/40 hover:bg-white/5 transition-all duration-200
+                         group text-left active:scale-95">
+              <div className="w-9 h-9 rounded-xl glass-panel flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-[18px] text-primary">folder_shared</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-black text-white">Mis archivos</p>
+                <p className="text-[10px] text-gray-600">Imágenes privadas</p>
+              </div>
+              <span className="material-symbols-outlined text-gray-700 text-[16px] group-hover:text-primary transition-colors">
+                chevron_right
+              </span>
+            </button>
+          )}
         </div>
       )}
 
@@ -153,15 +201,17 @@ export default function AssetLibrary({ manualSync }) {
               className="p-1.5 rounded-xl text-gray-500 hover:text-primary hover:bg-white/5 transition-colors flex-shrink-0">
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             </button>
-            <div className={`w-6 h-6 rounded-lg glass-panel flex items-center justify-center flex-shrink-0`}>
-              <span className={`material-symbols-outlined text-[14px] ${activeCat.color}`}>{activeCat.icon}</span>
+            <div className="w-6 h-6 rounded-lg glass-panel flex items-center justify-center flex-shrink-0">
+              <span className={`material-symbols-outlined text-[14px] ${activeCat.color}`}>
+                {scope === "private" ? "folder_shared" : activeCat.icon}
+              </span>
             </div>
-            <p className="text-xs font-black text-white truncate flex-1">{activeCat.label}</p>
+            <p className="text-xs font-black text-white truncate flex-1">{scope === "private" ? "Mis archivos" : activeCat.label}</p>
             <span className="text-[10px] text-gray-600 flex-shrink-0">{totalItems}</span>
           </div>
 
           {/* Buscador */}
-          <div className="relative flex-shrink-0">
+          {scope === "shared" && <div className="relative flex-shrink-0">
             <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2
                              text-gray-600 text-[15px] pointer-events-none">search</span>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
@@ -175,7 +225,7 @@ export default function AssetLibrary({ manualSync }) {
                 <span className="material-symbols-outlined text-[14px]">close</span>
               </button>
             )}
-          </div>
+          </div>}
 
           {/* Grilla */}
           <div className="flex-1 overflow-y-auto">
@@ -186,7 +236,7 @@ export default function AssetLibrary({ manualSync }) {
             ) : error ? (
               <div className="text-center py-8">
                 <p className="text-red-400 text-xs">{error}</p>
-                <button onClick={fetchAssets} className="mt-3 text-xs text-primary hover:underline">Reintentar</button>
+                <button onClick={loadAssets} className="mt-3 text-xs text-primary hover:underline">Reintentar</button>
               </div>
             ) : assets.length === 0 ? (
               <div className="text-center py-10">
@@ -195,8 +245,9 @@ export default function AssetLibrary({ manualSync }) {
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-1.5">
-                {assets.map((asset) => (
-                  <button key={asset.id} onClick={() => addToCanvas(asset)} disabled={!!adding}
+                {assets.map((asset) => {
+                  const assetKey = asset.path || asset.id;
+                  return <button key={assetKey} onClick={() => addToCanvas(asset)} disabled={!!adding}
                     title={asset.name}
                     className="relative group aspect-square rounded-xl overflow-hidden
                                border border-white/8 hover:border-primary/50
@@ -206,19 +257,19 @@ export default function AssetLibrary({ manualSync }) {
                       className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100
                                     transition-opacity duration-200 flex items-center justify-center">
-                      {adding === asset.id ? (
+                      {adding === assetKey ? (
                         <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <span className="material-symbols-outlined text-primary text-[20px]">add_circle</span>
                       )}
                     </div>
-                  </button>
-                ))}
+                  </button>;
+                })}
               </div>
             )}
 
             {/* Paginación */}
-            {!loading && totalPages > 1 && (
+            {!loading && scope === "shared" && totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-3 pb-2">
                 <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}
                   className="p-1.5 rounded-lg border border-white/10 text-gray-500

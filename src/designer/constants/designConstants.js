@@ -19,7 +19,7 @@ export const DEFAULT_TEXT_CONFIG = {
   fontFamily: "arial",
   originX: "center",
   originY: "center",
-  fill: "#ffffff",
+  fill: "#1f2937",
 };
 
 export const TSHIRT_COLOR_CODES = [

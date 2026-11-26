@@ -6,15 +6,15 @@ import { prefetchStudio } from "../lib/prefetchStudio";
 const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 const CATEGORIES = [
-  { value: "",            label: "Todos",      icon: "grid_view",      color: "#00f2ff",  desc: "Toda la colección" },
-  { value: "cyberpunk",   label: "Cyberpunk",  icon: "memory",         color: "#ecb2ff",  desc: "Sci-fi y tecnología" },
-  { value: "streetwear",  label: "Streetwear", icon: "skateboarding",  color: "#00f2ff",  desc: "Urbano y acción" },
-  { value: "graficos",    label: "Gráficos",   icon: "brush",          color: "#bdec00",  desc: "Arte y diseño" },
-  { value: "logos",       label: "Logos",      icon: "verified",       color: "#facc15",  desc: "Logos y posters" },
-  { value: "minimalista", label: "Minimal",    icon: "minimize",       color: "#60a5fa",  desc: "Simple y limpio" },
-  { value: "texturas",    label: "Texturas",   icon: "texture",        color: "#fb923c",  desc: "Fondos y tramas" },
-  { value: "iconos",      label: "Íconos",     icon: "emoji_symbols",  color: "#f472b6",  desc: "Símbolos" },
-  { value: "general",     label: "General",    icon: "category",       color: "#9ca3af",  desc: "Varios" },
+  { value: "",            label: "Todos",      icon: "grid_view",      color: "#7866c2",  desc: "Toda la colección" },
+  { value: "cyberpunk",   label: "Cyberpunk",  icon: "memory",         color: "#3aaec2",  desc: "Sci-fi y tecnología" },
+  { value: "streetwear",  label: "Streetwear", icon: "skateboarding",  color: "#7866c2",  desc: "Urbano y acción" },
+  { value: "graficos",    label: "Gráficos",    icon: "brush",          color: "#7866c2",  desc: "Arte y diseño" },
+  { value: "logos",       label: "Logos",      icon: "verified",       color: "#bd779d",  desc: "Logos y posters" },
+  { value: "minimalista", label: "Minimal",    icon: "minimize",       color: "#6d7786",  desc: "Simple y limpio" },
+  { value: "texturas",    label: "Texturas",   icon: "texture",        color: "#5294a1",  desc: "Fondos y tramas" },
+  { value: "iconos",      label: "Íconos",     icon: "emoji_symbols",  color: "#a9658c",  desc: "Símbolos" },
+  { value: "general",     label: "General",    icon: "category",       color: "#7d8290",  desc: "Varios" },
 ];
 
 const fadeUp = {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import BrandMark from "../components/BrandMark.jsx";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -80,11 +81,11 @@ export default function Register() {
       >
         {/* Header */}
         <motion.div variants={fadeUp} className="text-center mb-8">
-          <Link to="/" className="inline-block text-2xl font-black italic text-primary tracking-tighter mb-6">
-            NEON-STITCH
+          <Link to="/" className="mb-6 inline-flex">
+            <BrandMark />
           </Link>
           <h1 className="text-3xl font-black uppercase">Crear cuenta</h1>
-          <p className="text-gray-500 text-sm mt-2">Unite a la comunidad NEON-STITCH</p>
+          <p className="text-gray-500 text-sm mt-2">Unite a ANATHEL Design</p>
         </motion.div>
 
         {/* Barra de pasos */}
