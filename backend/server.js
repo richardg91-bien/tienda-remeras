@@ -17,6 +17,9 @@ const { default: userRoutes }    = await import("./routes/userRoutes.js");
 const { default: designRoutes }  = await import("./routes/designRoutes.js");
 const { default: paymentRoutes } = await import("./routes/paymentRoutes.js");
 const { default: assetRoutes }   = await import("./routes/assetRoutes.js");
+const { default: projectRoutes } = await import("./routes/projectRoutes.js");
+const { default: privateAssetRoutes } = await import("./routes/privateAssetRoutes.js");
+const { default: productModelRoutes } = await import("./routes/productModelRoutes.js");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -25,16 +28,19 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors({
   origin: (origin, callback) => {
-    const allowed = [
-      process.env.FRONTEND_URL,
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ].filter(Boolean);
+    const allowed = new Set(["http://localhost:5173", "http://localhost:3000"]);
+    if (process.env.FRONTEND_URL) {
+      try {
+        allowed.add(new URL(process.env.FRONTEND_URL).origin);
+      } catch {
+        console.error("FRONTEND_URL inválida; CORS solo permitirá los orígenes locales configurados.");
+      }
+    }
     // Permite requests sin origin (Postman, Railway health checks)
-    if (!origin || allowed.some(o => origin.startsWith(o))) {
+    if (!origin || allowed.has(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS bloqueado: ${origin}`));
+      callback(null, false);
     }
   },
   credentials: true,
@@ -45,15 +51,16 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 // Rate limit global (excluye el webhook de MercadoPago: sus reintentos no deben consumir cupo)
+const apiRateLimiter = rateLimit({
+  windowMs:        15 * 60 * 1000,
+  max:             200,
+  standardHeaders: true,
+  legacyHeaders:   false,
+  message:         { message: "Demasiadas solicitudes. Intentá en unos minutos." },
+});
 app.use((req, res, next) => {
   if (req.path === "/api/payments/webhook") return next();
-  rateLimit({
-    windowMs:        15 * 60 * 1000,
-    max:             200,
-    standardHeaders: true,
-    legacyHeaders:   false,
-    message:         { message: "Demasiadas solicitudes. Intentá en unos minutos." },
-  })(req, res, next);
+  apiRateLimiter(req, res, next);
 });
 
 // ── Rutas de la API ───────────────────────────────────────
@@ -62,6 +69,9 @@ app.use("/api/users",    userRoutes);
 app.use("/api/designs",  designRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/assets",   assetRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/private-assets", privateAssetRoutes);
+app.use("/api/products", productModelRoutes);
 
 // Compatibilidad con el endpoint original del frontend
 app.post("/create_preference", (req, res) =>

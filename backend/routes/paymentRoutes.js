@@ -4,20 +4,15 @@ import {
   webhook,
   getOrder,
 } from "../controllers/paymentController.js";
-import { protect, optionalAuth } from "../middleware/auth.js";
+import { lazyOptionalAuth, lazyProtect } from "./authAdapters.js";
 
-const router = Router();
+export const createPaymentRouter = ({ protect = lazyProtect, optionalAuth = lazyOptionalAuth } = {}) => {
+  const router = Router();
+  router.post("/create_preference", optionalAuth, createPreference);
+  router.post("/webhook", webhook);
+  router.get("/order/:id", protect, getOrder);
+  return router;
+};
 
-// POST /api/payments/create_preference
-// Funciona para usuarios autenticados y guests
-router.post("/create_preference", optionalAuth, createPreference);
-
-// POST /api/payments/webhook  (MercadoPago llama aquí)
-// Sin autenticación — MP envía su propia firma
-router.post("/webhook", webhook);
-
-// GET /api/payments/order/:id
-router.get("/order/:id", protect, getOrder);
-
-// Mantiene compatibilidad con el endpoint anterior /create_preference
+const router = createPaymentRouter();
 export default router;

@@ -6,17 +6,17 @@ import {
   deleteAsset,
   getCategories,
 } from "../controllers/assetController.js";
-import { protect, optionalAuth } from "../middleware/auth.js";
+import { lazyOptionalAuth, lazyProtect } from "./authAdapters.js";
 
-const router = Router();
+export const createAssetRouter = ({ protect = lazyProtect, optionalAuth = lazyOptionalAuth } = {}) => {
+  const router = Router();
+  router.get("/", optionalAuth, getAssets);
+  router.get("/categories", optionalAuth, getCategories);
+  router.get("/:id", optionalAuth, getAssetById);
+  router.post("/", protect, uploadAsset);
+  router.delete("/:id", protect, deleteAsset);
+  return router;
+};
 
-// Públicas — cualquiera puede ver el banco
-router.get("/",              optionalAuth, getAssets);
-router.get("/categories",    optionalAuth, getCategories);
-router.get("/:id",           optionalAuth, getAssetById);
-
-// Requiere login
-router.post("/",             protect, uploadAsset);
-router.delete("/:id",        protect, deleteAsset);
-
+const router = createAssetRouter();
 export default router;

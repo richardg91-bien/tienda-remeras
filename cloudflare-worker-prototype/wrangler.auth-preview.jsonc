@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "anathel-auth-compat-lab",
+  "main": "src/auth-preview-wrapper.mjs",
+  "compatibility_date": "2026-11-26",
+  "preview_urls": true,
+  "observability": {
+    "enabled": false
+  },
+  "previews": {
+    "vars": {
+      "LAB_MODE": "auth-compat-preview-only"
+    },
+    "observability": {
+      "enabled": true,
+      "logs": {
+        "enabled": true,
+        "invocation_logs": true,
+        "persist": true
+      },
+      "traces": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "persist": true
+      }
+    }
+  }
+}

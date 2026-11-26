@@ -1,7 +1,13 @@
 import bcrypt    from "bcryptjs";
 import { validationResult } from "express-validator";
-import supabase  from "../config/supabase.js";
 import { cloudinary, uploadAvatar, uploadToCloudinary } from "../config/cloudinary.js";
+import { getDatabaseProvider, getLabDatabasePool } from "../config/databaseProvider.js";
+
+const getSupabase = async () => (await import("../config/supabase.js")).default;
+const labDatabase = () => getDatabaseProvider() === "postgres-lab";
+
+const profileReadColumns = "id, first_name, last_name, email, phone, bio, avatar_url, address, role, is_verified, created_at";
+const profileUpdateColumns = "id, first_name, last_name, email, phone, bio, avatar_url, address, role, created_at";
 
 const _sanitize = (user) => {
   const { password_hash: _ph, refresh_token: _rt, ...safe } = user;
@@ -11,16 +17,25 @@ const _sanitize = (user) => {
 // ── GET /api/users/profile ────────────────────────────────────────────────────
 export const getProfile = async (req, res) => {
   try {
+    if (labDatabase()) {
+      const { rows } = await getLabDatabasePool().query(
+        `SELECT ${profileReadColumns} FROM public.users WHERE id = $1`,
+        [req.user.id],
+      );
+      if (!rows[0]) throw Object.assign(new Error("Profile not found"), { code: "PGRST116" });
+      return res.json({ user: rows[0] });
+    }
+    const supabase = await getSupabase();
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, first_name, last_name, email, phone, bio, avatar_url, address, role, is_verified, created_at")
+      .select(profileReadColumns)
       .eq("id", req.user.id)
       .single();
 
     if (error) throw error;
     return res.json({ user });
   } catch (error) {
-    console.error("getProfile error:", error);
+    console.error("getProfile error:", { code: error?.code || "unknown" });
     return res.status(500).json({ message: "Error obteniendo perfil." });
   }
 };
@@ -31,7 +46,6 @@ export const updateProfile = async (req, res) => {
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
   try {
-    const allowed = ["first_name", "last_name", "phone", "bio"]; // eslint-disable-line no-unused-vars
     const updates = {};
 
     // Mapea camelCase del body a snake_case de la DB
@@ -40,17 +54,53 @@ export const updateProfile = async (req, res) => {
     if (req.body.phone     !== undefined) updates.phone      = req.body.phone;
     if (req.body.bio       !== undefined) updates.bio        = req.body.bio;
 
-    if (req.body.address !== undefined) {
+    if (req.body.address !== undefined && !labDatabase()) {
       // Merge la dirección existente con la nueva
+      const supabase = await getSupabase();
       const { data: current } = await supabase
         .from("users").select("address").eq("id", req.user.id).single();
       updates.address = { ...(current?.address ?? {}), ...req.body.address };
     }
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(updates).length === 0 && req.body.address === undefined) {
       return res.status(400).json({ message: "No hay campos para actualizar." });
     }
 
+    if (labDatabase()) {
+      const client = await getLabDatabasePool().connect();
+      try {
+        await client.query("BEGIN");
+        if (req.body.address !== undefined) {
+          const { rows: currentRows } = await client.query(
+            "SELECT address FROM public.users WHERE id = $1 FOR UPDATE", [req.user.id],
+          );
+          if (!currentRows[0]) throw Object.assign(new Error("Profile not found"), { code: "PGRST116" });
+          updates.address = { ...(currentRows[0].address ?? {}), ...req.body.address };
+        }
+
+        const allowedColumns = { first_name: "first_name", last_name: "last_name", phone: "phone", bio: "bio", address: "address" };
+        const values = [req.user.id];
+        const assignments = Object.entries(updates).map(([field, value]) => {
+          const column = allowedColumns[field];
+          values.push(field === "address" ? JSON.stringify(value) : value);
+          return `${column} = $${values.length}${field === "address" ? "::jsonb" : ""}`;
+        });
+        const { rows } = await client.query(`
+          UPDATE public.users SET ${assignments.join(", ")}
+          WHERE id = $1 RETURNING ${profileUpdateColumns}
+        `, values);
+        if (!rows[0]) throw Object.assign(new Error("Profile not found"), { code: "PGRST116" });
+        await client.query("COMMIT");
+        return res.json({ message: "Perfil actualizado.", user: rows[0] });
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    }
+
+    const supabase = await getSupabase();
     const { data: user, error } = await supabase
       .from("users")
       .update(updates)
@@ -61,7 +111,7 @@ export const updateProfile = async (req, res) => {
     if (error) throw error;
     return res.json({ message: "Perfil actualizado.", user });
   } catch (error) {
-    console.error("updateProfile error:", error);
+    console.error("updateProfile error:", { code: error?.code || "unknown" });
     return res.status(500).json({ message: "Error actualizando perfil." });
   }
 };
@@ -72,6 +122,7 @@ export const changePassword = async (req, res) => {
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
   try {
+    const supabase = await getSupabase();
     const { currentPassword, newPassword } = req.body;
 
     // Necesitamos el hash actual
@@ -109,6 +160,7 @@ export const uploadUserAvatar = [
   // Paso 2: sube a Cloudinary y actualiza la DB
   async (req, res) => {
     try {
+      const supabase = await getSupabase();
       if (!req.file) return res.status(400).json({ message: "No se recibió ninguna imagen." });
 
       // Elimina avatar anterior si existe
@@ -143,6 +195,7 @@ export const uploadUserAvatar = [
 // ── DELETE /api/users/avatar ──────────────────────────────────────────────────
 export const deleteAvatar = async (req, res) => {
   try {
+    const supabase = await getSupabase();
     const { data: user } = await supabase
       .from("users").select("avatar_public_id").eq("id", req.user.id).single();
 
@@ -169,6 +222,31 @@ export const getMyOrders = async (req, res) => {
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const from  = (page - 1) * limit;
     const to    = from + limit - 1;
+
+    if (labDatabase()) {
+      if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to)) {
+        return res.status(400).json({ message: "Paginación inválida." });
+      }
+      const client = await getLabDatabasePool().connect();
+      try {
+        await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+        const [{ rows: countRows }, { rows: orders }] = await Promise.all([
+          client.query("SELECT COUNT(*)::int AS total FROM public.orders WHERE user_id = $1", [req.user.id]),
+          client.query("SELECT * FROM public.orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+            [req.user.id, limit, from]),
+        ]);
+        await client.query("COMMIT");
+        const count = countRows[0].total;
+        return res.json({ orders, pagination: { page, limit, total: count, pages: Math.ceil(count / limit) } });
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    }
+
+    const supabase = await getSupabase();
 
     const { data: orders, count, error } = await supabase
       .from("orders")
@@ -197,6 +275,7 @@ export const getMyOrders = async (req, res) => {
 // ── DELETE /api/users/account ─────────────────────────────────────────────────
 export const deleteAccount = async (req, res) => {
   try {
+    const supabase = await getSupabase();
     const { password } = req.body;
 
     const { data: user } = await supabase

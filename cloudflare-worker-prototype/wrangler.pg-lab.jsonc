@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "neon-stitch-pg-local-lab",
+  "main": "src/pg-local-probe.mjs",
+  "compatibility_date": "2026-11-26",
+  "workers_dev": false,
+  "vars": {
+    "LAB_MODE": "local-only",
+    "LAB_JWT_SECRET": "synthetic-local-only-project-test-secret"
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}
