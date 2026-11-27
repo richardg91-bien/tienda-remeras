@@ -8,6 +8,7 @@ export const CATEGORIES = ["Todos", "Génesis", "Cyberpunk", "Minimalista", "Pre
 export const products = [
   {
     id: 1,
+    productRef: "tee-classic",
     name: "Neural Web Tee",
     price: 12000,
     originalPrice: 15000,
@@ -26,6 +27,7 @@ export const products = [
   },
   {
     id: 2,
+    productRef: "tee-classic",
     name: "Void Minimal Tee",
     price: 10000,
     originalPrice: null,
@@ -44,6 +46,7 @@ export const products = [
   },
   {
     id: 3,
+    productRef: "tee-classic",
     name: "Glitch Override",
     price: 14000,
     originalPrice: 18000,
@@ -62,6 +65,7 @@ export const products = [
   },
   {
     id: 4,
+    productRef: "tee-classic",
     name: "Genesis Drop 01",
     price: 16000,
     originalPrice: null,
@@ -80,6 +84,7 @@ export const products = [
   },
   {
     id: 5,
+    productRef: "tee-classic",
     name: "Neon Signal Tee",
     price: 13500,
     originalPrice: 16000,
@@ -98,6 +103,7 @@ export const products = [
   },
   {
     id: 6,
+    productRef: "tee-classic",
     name: "Mono Zero",
     price: 9500,
     originalPrice: null,
@@ -116,6 +122,7 @@ export const products = [
   },
   {
     id: 7,
+    productRef: "tee-classic",
     name: "Genesis Drop 02",
     price: 17500,
     originalPrice: null,
@@ -134,6 +141,7 @@ export const products = [
   },
   {
     id: 8,
+    productRef: "tee-classic",
     name: "Circuit Crop",
     price: 11000,
     originalPrice: 13000,

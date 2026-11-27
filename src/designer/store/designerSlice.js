@@ -6,6 +6,8 @@ const initialState = {
   selectedView:  "front",
   selectedProductRef: "tee-classic",
   selectedSurfaceId: "front",
+  selectedCatalogProductId: null,
+  selectedSize: null,
 };
 
 export const designerSlice = createSlice({
@@ -17,6 +19,8 @@ export const designerSlice = createSlice({
     setSelectedView:  (state, action) => { state.selectedView  = action.payload; },
     setSelectedProductRef: (state, action) => { state.selectedProductRef = action.payload; },
     setSelectedSurfaceId: (state, action) => { state.selectedSurfaceId = action.payload; },
+    setSelectedCatalogProductId: (state, action) => { state.selectedCatalogProductId = action.payload; },
+    setSelectedSize: (state, action) => { state.selectedSize = action.payload; },
   },
 });
 
@@ -26,5 +30,7 @@ export const {
   setSelectedView,
   setSelectedProductRef,
   setSelectedSurfaceId,
+  setSelectedCatalogProductId,
+  setSelectedSize,
 } = designerSlice.actions;
 export default designerSlice.reducer;

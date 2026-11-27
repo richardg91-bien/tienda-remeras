@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   getSurfaceCanvasSize,
-  getSurfacePhysicalDimensions,
-  millimetersToCentimeters,
 } from "../utils/surfaceUtils.js";
 import {
   CHILD_BODY_SIZE_REFERENCES,
@@ -22,6 +20,7 @@ const TshirtCanvas = ({
   model,
   surface,
   initialDesign,
+  layoutMode = "combined",
   onLoadError,
 }) => {
   const productRef = model?.id || "tee-classic";
@@ -87,20 +86,20 @@ const TshirtCanvas = ({
     };
   }).filter(({ rect }) => rect);
   const selectedGuideRect = guideRects.find(({ guide }) => guide.id === selectedGuide?.id)?.rect;
-  const physicalDimensions = getSurfacePhysicalDimensions(surface);
-  const selectedBodyRange = modelGuideFamily === "infant-shirt" && childTable === "age-dimensions"
-    ? CHILD_BODY_SIZE_REFERENCES.find((entry) => entry.id === activeAgeId)
-    : null;
-
   useEffect(() => {
     const frame = frameRef.current;
-    const container = frame?.closest(".canvas-viewport") || frame?.parentElement;
+    const container = layoutMode === "flat"
+      ? frame?.closest(".flat-surface-card") || frame?.closest(".canvas-viewport") || frame?.parentElement
+      : frame?.closest(".canvas-viewport") || frame?.parentElement;
     if (!container || typeof ResizeObserver === "undefined") return;
 
     const updateScale = () => {
       const availableWidth = container.clientWidth - 16;
       const controlsHeight = guidePanelRef.current?.getBoundingClientRect().height || 0;
-      const availableHeight = container.clientHeight - controlsHeight - 28;
+      const headingHeight = layoutMode === "flat"
+        ? container.querySelector(".flat-surface-heading")?.getBoundingClientRect().height || 0
+        : 0;
+      const availableHeight = container.clientHeight - controlsHeight - headingHeight - 28;
       if (availableWidth <= 0 || availableHeight <= 0) return;
       setDisplayScale(Math.min(1, availableWidth / width, availableHeight / height));
     };
@@ -110,7 +109,7 @@ const TshirtCanvas = ({
     if (guidePanelRef.current) observer.observe(guidePanelRef.current);
     updateScale();
     return () => observer.disconnect();
-  }, [width, height, guides.length]);
+  }, [width, height, guides.length, layoutMode]);
 
   const updateGuideDimension = (axis, value) => {
     if (!selectedGuide || !guideKey) return;
@@ -123,13 +122,6 @@ const TshirtCanvas = ({
       },
     }));
   };
-
-  const labelWidth = 112 / displayScale;
-  const labelHeight = 20 / displayScale;
-  const recommendation = selectedGuide?.referenceRange
-    || selectedGuide?.recommendedRange
-    || (selectedGuide ? `${selectedGuide.widthCm} × ${selectedGuide.heightCm} cm` : "");
-  const recommendationLabel = "Estampado recomendado";
 
   return (
     <div className="flex flex-col items-center gap-2" style={{ width: width * displayScale }}>
@@ -251,26 +243,29 @@ const TshirtCanvas = ({
               ))}</tbody>
             </table>
           )}
-          <p className="mt-1 text-[10px] leading-tight text-gray-500">
-            {selectedBodyRange && `Referencia corporal (ancho × alto): ${selectedBodyRange.widthRangeCm[0]}–${selectedBodyRange.widthRangeCm[1]} × ${selectedBodyRange.heightRangeCm[0]}–${selectedBodyRange.heightRangeCm[1]} cm. `}
-            {recommendation && `${recommendationLabel}: ${recommendation}. `}
-            {selectedGuide?.ageLabel && `Rango: ${selectedGuide.ageLabel}. `}
-            {physicalDimensions && `Superficie: ${millimetersToCentimeters(physicalDimensions.widthMm)} × ${millimetersToCentimeters(physicalDimensions.heightMm)} cm. `}
-            {selectedGuide?.adjustmentRangeCm === null
-              ? "Referencia orientativa, personalizable y sin límite universal. "
-              : "Referencia orientativa para M/L, ajustable ±2 cm. "}
-            Ubicación visual, sin distancias verificadas a costuras.
-            {modelGuideFamily === "cap" && " Solo panel frontal; no aplicar a curvas ni laterales."}
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-600" aria-label="Referencia visual de áreas">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-3 w-3 border border-slate-500 bg-slate-100" aria-hidden="true" />
+              Superficie completa de la prenda
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-3 w-3 border-2 border-violet-700 bg-violet-200/70" aria-hidden="true" />
+              Zona de estampado
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] leading-relaxed text-gray-600">
+            La imagen aparece dentro de esta zona para que puedas moverla, cambiar su tamaño, girarla y personalizarla. Las medidas son orientativas y sirven como referencia del estampado.
+            <span className="block font-semibold">No son medidas de fabricación verificadas.</span>
           </p>
         </section>
       )}
       <div
         ref={frameRef}
-        className={`relative overflow-hidden ${isTshirt ? "" : "border border-[#e2e4ed] bg-white shadow-sm"}`}
+        className="relative overflow-hidden border border-slate-400 bg-slate-100 shadow-inner"
         style={{
           width: width * displayScale,
           height: height * displayScale,
-          borderRadius: isTshirt ? undefined : isCircular ? "50%" : "12px",
+          borderRadius: isCircular ? "50%" : "12px",
         }}
       >
         <div
@@ -291,10 +286,6 @@ const TshirtCanvas = ({
           ) : (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 text-center text-[#73815f]">
               <span className="text-[11px] font-semibold">{surface?.label || "Área de impresión"}</span>
-              {surface?.widthMm && surface?.heightMm && (
-                <span className="text-[9px]">{surface.widthMm} × {surface.heightMm} mm</span>
-              )}
-              {surface?.diameterMm && <span className="text-[9px]">Ø {surface.diameterMm} mm</span>}
             </div>
           )}
           <canvas
@@ -309,17 +300,8 @@ const TshirtCanvas = ({
               viewBox={`0 0 ${width} ${height}`}
               aria-hidden="true"
             >
-              {guideRects.map(({ guide, dimensions, index, rect }) => {
+              {guideRects.map(({ guide, rect }) => {
                 const isSelected = guide.id === selectedGuide?.id;
-                const labelX = Math.max(
-                  2 / displayScale,
-                  Math.min(rect.x, width - labelWidth - 2 / displayScale),
-                );
-                const labelY = Math.min(
-                  height - labelHeight - 2 / displayScale,
-                  Math.max(2 / displayScale, rect.y - labelHeight - 2 / displayScale)
-                    + index * (labelHeight + 2 / displayScale),
-                );
                 const stroke = isSelected ? "#7866c2" : "#858b99";
                 return (
                   <g key={guide.id}>
@@ -328,30 +310,11 @@ const TshirtCanvas = ({
                       y={rect.y}
                       width={rect.width}
                       height={rect.height}
-                      fill={isSelected ? "rgba(183,217,144,0.06)" : "transparent"}
+                      fill={isSelected ? "rgba(120,102,194,0.18)" : "transparent"}
                       stroke={stroke}
-                      strokeWidth={(isSelected ? 2 : 1.5) / displayScale}
+                      strokeWidth={(isSelected ? 2.5 : 1.5) / displayScale}
                       strokeDasharray={`${8 / displayScale} ${5 / displayScale}`}
                     />
-                    <rect
-                      x={labelX}
-                      y={labelY}
-                      width={labelWidth}
-                      height={labelHeight}
-                      rx={4 / displayScale}
-                      fill="white"
-                      stroke={stroke}
-                      strokeWidth={1 / displayScale}
-                    />
-                    <text
-                      x={labelX + 6 / displayScale}
-                      y={labelY + 13 / displayScale}
-                      fill="#343746"
-                      fontSize={10 / displayScale}
-                      fontWeight={isSelected ? "700" : "500"}
-                    >
-                      {`${dimensions.widthCm} × ${dimensions.heightCm} cm`}
-                    </text>
                   </g>
                 );
               })}

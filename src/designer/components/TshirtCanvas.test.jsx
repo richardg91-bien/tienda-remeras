@@ -29,16 +29,22 @@ describe("TshirtCanvas print guides", () => {
     const widthInput = screen.getByRole("spinbutton", { name: "Ancho de la guía en centímetros" });
     const visibleGuide = () => container.querySelector('svg[aria-hidden="true"]');
 
-    expect(visibleGuide()?.textContent).toContain("30 × 35 cm");
+    expect([...zoneSelect.options].map((option) => option.textContent)).toEqual([
+      "Frente completo", "Frente medio", "Vertical", "Horizontal",
+    ]);
     expect(visibleGuide()?.querySelectorAll("g")).toHaveLength(4);
-    expect(visibleGuide()?.textContent).toContain("23 × 23 cm");
-    expect(visibleGuide()?.textContent).toContain("12 × 35 cm");
-    expect(visibleGuide()?.textContent).toContain("27 × 7 cm");
+    expect(widthInput.value).toBe("30");
+    expect(screen.getByRole("spinbutton", { name: "Alto de la guía en centímetros" }).value).toBe("35");
+    expect(screen.getByText(/Las medidas son orientativas y sirven como referencia del estampado/)).toBeTruthy();
+    expect(screen.getByText("No son medidas de fabricación verificadas.")).toBeTruthy();
+    expect(screen.getByLabelText("Referencia visual de áreas").textContent).toContain("Superficie completa de la prenda");
+    expect(screen.getByLabelText("Referencia visual de áreas").textContent).toContain("Zona de estampado");
+    expect(visibleGuide()?.querySelector("rect")?.getAttribute("fill")).toBe("rgba(120,102,194,0.18)");
     expect(canvas?.parentElement?.querySelector("svg[aria-hidden='true']")).toBe(visibleGuide());
 
     fireEvent.change(zoneSelect, { target: { value: "front-medium" } });
     fireEvent.change(widthInput, { target: { value: "25" } });
-    expect(visibleGuide()?.textContent).toContain("25 × 23 cm");
+    expect(widthInput.value).toBe("25");
 
     fireEvent.change(sizeSelect, { target: { value: "L" } });
     expect(widthInput.value).toBe("23");
@@ -51,7 +57,8 @@ describe("TshirtCanvas print guides", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar guías" }));
     expect(visibleGuide()).toBeNull();
     fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar guías" }));
-    expect(visibleGuide()?.textContent).toContain("24 × 23 cm");
+    expect(visibleGuide()?.querySelectorAll("g")).toHaveLength(4);
+    expect(widthInput.value).toBe("24");
   });
 
   it("only displays guides for the selected real model and keeps child tables separate", () => {
@@ -60,7 +67,8 @@ describe("TshirtCanvas print guides", () => {
     expect(guideSvg()?.textContent).not.toContain("10 × 5 cm");
     rerender(<TshirtCanvas {...props} model={{ id: "cap-standard", name: "Gorra", category: "accesorios" }} surface={{ id: "front-panel", label: "Panel frontal", widthMm: 120, heightMm: 60 }} />);
     expect(guideSvg()?.querySelectorAll("g")).toHaveLength(4);
-    for (const size of ["10 × 5 cm", "12 × 6 cm", "6 × 4 cm", "5 × 5 cm"]) expect(guideSvg()?.textContent).toContain(size);
+    expect(screen.getByRole("spinbutton", { name: "Ancho de la guía en centímetros" }).value).toBe("10");
+    expect(screen.getByRole("spinbutton", { name: "Alto de la guía en centímetros" }).value).toBe("5");
 
     rerender(<TshirtCanvas {...props} model={{ id: "tee-infantil", name: "Remera infantil", category: "textil" }} />);
     const tableSelect = screen.getByRole("combobox", { name: "Tabla de medidas infantiles" });
@@ -76,6 +84,7 @@ describe("TshirtCanvas print guides", () => {
     expect(zoneSelect.options).toHaveLength(2);
     fireEvent.change(ageSelect, { target: { value: "age-7-11" } });
     fireEvent.change(zoneSelect, { target: { value: "infant-print-age-7-11" } });
-    expect(guideSvg()?.textContent).toContain("19 × 25 cm");
+    expect(screen.getByRole("spinbutton", { name: "Ancho de la guía en centímetros" }).value).toBe("19");
+    expect(screen.getByRole("spinbutton", { name: "Alto de la guía en centímetros" }).value).toBe("25");
   });
 });

@@ -1,12 +1,25 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "neon-stitch-auth-compat-lab",
+  "name": "anathel-mvp-local",
   "main": "src/index.mjs",
-  "compatibility_date": "2026-11-26",
+  "compatibility_date": "2026-11-27",
+  "workers_dev": false,
   "observability": { "enabled": false },
   "vars": {
-    "JWT_SECRET": "synthetic-local-only-jwt-secret-for-tests",
-    "JWT_REFRESH_SECRET": "synthetic-local-only-refresh-secret-for-tests",
-    "NODE_ENV": "test"
-  }
+    "FRONTEND_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "anathel-mvp-local",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PRIVATE_ASSETS",
+      "bucket_name": "anathel-mvp-private-local"
+    }
+  ]
 }

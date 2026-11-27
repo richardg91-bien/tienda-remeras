@@ -1,4 +1,5 @@
 import { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Loader } from "@react-three/drei";
@@ -10,6 +11,8 @@ import {
   setSelectedSurfaceId,
   setSelectedView,
   setTshirtColor,
+  setSelectedCatalogProductId,
+  setSelectedSize,
 } from "../designer/store/designerSlice.js";
 import { CanvasProvider, useCanvas } from "../designer/hooks/useCanvas.jsx";
 import { useCanvasTextureSync }      from "../designer/hooks/useCanvasTextureSync.jsx";
@@ -74,6 +77,29 @@ function ProductPreview({ model, tshirtColor, frontTexture, backTexture, selecte
   );
 }
 
+function ViewModeToggle({ value, onChange }) {
+  return (
+    <div role="group" aria-label="Modo de vista" className="flex items-center gap-1 rounded-xl border border-[#e2e4ed] bg-white p-1">
+      <button
+        type="button"
+        aria-pressed={value === "combined"}
+        onClick={() => onChange("combined")}
+        className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${value === "combined" ? "bg-[#d9d4f2] text-gray-900" : "text-gray-600 hover:bg-violet-50"}`}
+      >
+        3D + 2D
+      </button>
+      <button
+        type="button"
+        aria-pressed={value === "flat"}
+        onClick={() => onChange("flat")}
+        className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${value === "flat" ? "bg-[#d9d4f2] text-gray-900" : "text-gray-600 hover:bg-violet-50"}`}
+      >
+        Plano 2D
+      </button>
+    </div>
+  );
+}
+
 // Detecta el breakpoint real: los layouts desktop y mobile NO deben montarse
 // ambos a la vez (aunque uno esté oculto con CSS), porque cada layout registra
 // sus propios canvas de Fabric como frontCanvas/backCanvas en el contexto y el
@@ -94,6 +120,7 @@ function useIsDesktop() {
 
 function DesignerContent() {
   const isDesktop    = useIsDesktop();
+  const [searchParams] = useSearchParams();
   const dispatch     = useDispatch();
   const tshirtColor  = useSelector((s) => s.designer.tshirtColor);
   const selectedView = useSelector((s) => s.designer.selectedView);
@@ -105,9 +132,23 @@ function DesignerContent() {
   const [modelsError, setModelsError] = useState("");
   const [sourceDesign, setSourceDesign] = useState(null);
   const [canvasGeneration, setCanvasGeneration] = useState(0);
+  const requestedProductRef = searchParams.get("productRef");
+  const requestedCatalogProductId = searchParams.get("catalogProductId");
+  const requestedSize = searchParams.get("size");
+  const requestedColor = searchParams.get("color");
   const reportCanvasError = useCallback((error) => {
     setModelsError(`No se pudo restaurar esta superficie: ${error.message}`);
   }, []);
+
+  useEffect(() => {
+    if (requestedCatalogProductId) {
+      dispatch(setSelectedCatalogProductId(requestedCatalogProductId));
+    }
+    if (requestedSize) dispatch(setSelectedSize(requestedSize));
+    if (requestedColor && /^#[0-9a-f]{6}$/i.test(requestedColor)) {
+      dispatch(setTshirtColor(requestedColor));
+    }
+  }, [dispatch, requestedCatalogProductId, requestedColor, requestedSize]);
 
   useEffect(() => {
     let active = true;
@@ -117,12 +158,21 @@ function DesignerContent() {
         if (!models.length) throw new Error("La API no devolvió modelos activos.");
         setProductModels(models);
         setModelsError("");
+        const requestedModel = requestedProductRef
+          ? models.find((model) => model.id === requestedProductRef)
+          : null;
+        if (requestedModel) {
+          const requestedSurfaces = getProductSurfaces(requestedModel);
+          dispatch(setSelectedProductRef(requestedModel.id));
+          dispatch(setSelectedSurfaceId(requestedSurfaces[0]?.id || ""));
+          dispatch(setSelectedView("front"));
+        }
       })
       .catch((error) => {
         if (active) setModelsError(`No se pudieron cargar los modelos del catálogo: ${error.message}`);
       });
     return () => { active = false; };
-  }, []);
+  }, [dispatch, requestedProductRef]);
 
   const productModel = productModels.find((model) => model.id === selectedProductRef) || productModels[0];
   const surfaces = getProductSurfaces(productModel);
@@ -138,6 +188,11 @@ function DesignerContent() {
 
   const handleSurfaceChange = (surface, index) => {
     setSelectedObject(null);
+    dispatch(setSelectedSurfaceId(surface.id));
+    dispatch(setSelectedView(index === 1 ? "back" : "front"));
+  };
+
+  const activateSurface = (surface, index) => {
     dispatch(setSelectedSurfaceId(surface.id));
     dispatch(setSelectedView(index === 1 ? "back" : "front"));
   };
@@ -171,6 +226,9 @@ function DesignerContent() {
   const handleProductColorChange = (color) => dispatch(setTshirtColor(color));
   const [toolsOpen, setToolsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("combined");
+  const hasDedicatedFlatTemplate = productModel?.id === "tee-classic";
+  const showBothFlatSurfaces = isDesktop && viewMode === "flat" && hasDedicatedFlatTemplate;
 
   // Modal de talle — montado SIEMPRE a nivel de página (fuera de paneles con
   // overflow/transform) para que quede adelante del 3D y nunca quede inaccesible.
@@ -238,16 +296,18 @@ function DesignerContent() {
             )}
           </div>
 
-          {/* Botón herramientas */}
-          <button
-            onClick={() => setToolsOpen(v => !v)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-              toolsOpen ? "bg-primary text-background" : "glass-panel text-gray-800 border border-white/10 hover:border-primary/50"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">tune</span>
-            {toolsOpen ? "Cerrar" : "Herramientas"}
-          </button>
+          <div className="flex items-center gap-2">
+            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            <button
+              onClick={() => setToolsOpen(v => !v)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                toolsOpen ? "bg-primary text-background" : "glass-panel text-gray-800 border border-white/10 hover:border-primary/50"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">tune</span>
+              {toolsOpen ? "Cerrar" : "Herramientas"}
+            </button>
+          </div>
         </div>
 
         {modelsError && (
@@ -260,7 +320,7 @@ function DesignerContent() {
         <div className="flex-1 flex overflow-hidden relative">
 
           {/* 3D — ocupa la mayor parte (isolate confina el canvas WebGL a su stacking context) */}
-          <div className="flex-1 relative p-4 isolate z-0">
+          {viewMode === "combined" && <div className="flex-1 relative p-4 isolate z-0">
             <div className="absolute inset-4 rounded-3xl bg-primary/5 blur-[60px] pointer-events-none" />
             <div className="relative h-full glass-panel rounded-3xl overflow-hidden">
               <ProductPreview
@@ -277,34 +337,66 @@ function DesignerContent() {
             <p className="text-center text-[11px] text-gray-600 mt-2 flex items-center justify-center gap-1">
               <span className="material-symbols-outlined text-[13px]">360</span>Arrastrá para rotar
             </p>
-          </div>
+          </div>}
 
-          {/* Canvas 2D — siempre montados ambos, solo uno visible */}
-          <div className="canvas-viewport flex h-full min-h-0 max-h-full flex-col items-center justify-center gap-3 overflow-hidden p-4 flex-shrink-0 isolate z-0 relative">
+          {/* La vista plana reutiliza los canvas Fabric de cada superficie. */}
+          <div
+            className={`canvas-viewport h-full min-h-0 max-h-full overflow-hidden p-4 isolate z-0 relative ${
+              viewMode === "flat"
+                ? "grid flex-1 items-stretch gap-3"
+                : "flex flex-shrink-0 flex-col items-center justify-center gap-3"
+            }`}
+            style={viewMode === "flat" ? { gridTemplateColumns: `repeat(${Math.max(1, Math.min(surfaces.length, 2))}, minmax(0, 1fr))` } : undefined}
+          >
             {surfaces.length === 0 && (
               <p role="status" className="max-w-sm rounded-xl border border-[#e2e4ed] bg-white p-4 text-center text-sm text-gray-700">
                 Este modelo no informa superficies imprimibles físicas. No se mostrarán guías hasta que el catálogo las defina.
               </p>
             )}
-            {surfaces.map((surface, index) => (
-              <div key={`${surface.id}-${canvasGeneration}`} className={selectedSurface.id === surface.id ? "block" : "hidden"}>
-                <div className="glass-panel rounded-3xl overflow-hidden border border-white/8">
-                  <TshirtCanvas
-                    svgPath={index === 1
-                      ? TSHIRT_TYPES[selectedType]?.backPath || TSHIRT_TYPES["crew-neck"].backPath
-                      : TSHIRT_TYPES[selectedType]?.frontPath || TSHIRT_TYPES["crew-neck"].frontPath}
-                    view={index === 1 ? "back" : "front"}
-                    model={productModel}
-                    surface={surface}
-                    initialDesign={sourceDesign}
-                    onLoadError={reportCanvasError}
-                  />
+            {surfaces.length > 0 && !hasDedicatedFlatTemplate && (
+              <p role="status" className="col-span-full self-center justify-self-center max-w-sm rounded-xl border border-amber-300 bg-white p-4 text-center text-sm text-gray-700">
+                Falta una plantilla plana propia para {productModel.name}. No se usa una superficie genérica.
+              </p>
+            )}
+            {hasDedicatedFlatTemplate && surfaces.map((surface, index) => {
+              const visible = showBothFlatSurfaces || selectedSurface.id === surface.id;
+              return (
+                <div
+                  key={`${surface.id}-${canvasGeneration}`}
+                  className={`surface-canvas-card min-w-0 min-h-0 ${viewMode === "flat" ? "flat-surface-card flex h-full w-full flex-col" : "shrink-0"} ${visible ? "flex" : "hidden"}`}
+                  onPointerDownCapture={() => activateSurface(surface, index)}
+                >
+                  {showBothFlatSurfaces && (
+                    <button
+                      type="button"
+                      onClick={() => handleSurfaceChange(surface, index)}
+                      aria-pressed={selectedSurface.id === surface.id}
+                      className={`flat-surface-heading mb-2 rounded-lg px-3 py-1.5 text-xs font-bold ${
+                        selectedSurface.id === surface.id ? "bg-[#d9d4f2] text-gray-900" : "bg-white text-gray-600"
+                      }`}
+                    >
+                      {surface.label || surface.id}
+                    </button>
+                  )}
+                  <div className={`glass-panel min-h-0 overflow-hidden border border-white/8 ${viewMode === "flat" ? "flex flex-1 items-center justify-center rounded-2xl" : "rounded-3xl"}`}>
+                    <TshirtCanvas
+                      svgPath={index === 1
+                        ? TSHIRT_TYPES[selectedType]?.backPath || TSHIRT_TYPES["crew-neck"].backPath
+                        : TSHIRT_TYPES[selectedType]?.frontPath || TSHIRT_TYPES["crew-neck"].frontPath}
+                      view={index === 1 ? "back" : "front"}
+                      model={productModel}
+                      surface={surface}
+                      initialDesign={sourceDesign}
+                      layoutMode={viewMode}
+                      onLoadError={reportCanvasError}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-            {surfaces.length > 0 && <p className="text-[11px] text-gray-600 flex items-center gap-1">
+              );
+            })}
+            {surfaces.length > 0 && hasDedicatedFlatTemplate && <p className="col-span-full text-center text-[11px] text-gray-600 flex items-center justify-center gap-1">
               <span className="material-symbols-outlined text-[13px]">edit</span>
-              Editá el diseño en el canvas
+              {showBothFlatSurfaces ? "Editá frente y espalda directamente en cada superficie" : "Editá el diseño directamente en el plano"}
             </p>}
           </div>
 
@@ -396,6 +488,7 @@ function DesignerContent() {
               </button>
             ))}
           </div>
+          <ViewModeToggle value={viewMode} onChange={setViewMode} />
           {colorOptions.length > 0 && (
             <label className="flex items-center gap-2 text-xs font-semibold text-gray-700">
               Color
@@ -425,15 +518,20 @@ function DesignerContent() {
             y se dibujan POR ENCIMA del carrito aunque este sea fixed z-9999. */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Canvas 2D */}
-          <div className="canvas-viewport flex-1 flex items-center justify-center p-3 min-h-0 relative z-0 isolate">
+          <div className={`canvas-viewport ${viewMode === "flat" ? "flex-1" : "flex-[1.15] min-h-[210px]"} flex items-center justify-center p-3 overflow-hidden relative z-0 isolate`}>
             {surfaces.length === 0 && (
               <p role="status" className="max-w-sm rounded-xl border border-[#e2e4ed] bg-white p-4 text-center text-xs text-gray-700">
                 Este modelo no informa superficies imprimibles físicas. No se mostrarán guías hasta que el catálogo las defina.
               </p>
             )}
-            {surfaces.map((surface, index) => (
+            {surfaces.length > 0 && !hasDedicatedFlatTemplate && (
+              <p role="status" className="max-w-sm rounded-xl border border-amber-300 bg-white p-4 text-center text-xs text-gray-700">
+                Falta una plantilla plana propia para {productModel.name}. No se usa una superficie genérica.
+              </p>
+            )}
+            {hasDedicatedFlatTemplate && surfaces.map((surface, index) => (
               <div
-                key={surface.id}
+                key={`${surface.id}-${canvasGeneration}`}
                 className={`glass-panel rounded-2xl overflow-hidden border border-white/8 ${
                   selectedSurface.id === surface.id ? "block" : "hidden"
                 }`}
@@ -446,6 +544,7 @@ function DesignerContent() {
                   model={productModel}
                   surface={surface}
                   initialDesign={sourceDesign}
+                  layoutMode={viewMode}
                   onLoadError={reportCanvasError}
                 />
               </div>
@@ -453,16 +552,16 @@ function DesignerContent() {
           </div>
 
           {/* Divider */}
-          <div className="flex items-center justify-center py-1 flex-shrink-0">
+          {viewMode === "combined" && <div className="flex items-center justify-center py-1 flex-shrink-0">
             <div className="flex items-center gap-2 text-[10px] text-gray-700 font-bold uppercase">
               <div className="w-8 h-px bg-white/10" />
               <span className="material-symbols-outlined text-[14px]">view_in_ar</span>
               <div className="w-8 h-px bg-white/10" />
             </div>
-          </div>
+          </div>}
 
           {/* Modelo 3D — isolate evita que el canvas WebGL tape el carrito en mobile */}
-          <div className="flex-[0.7] min-h-0 relative z-0 isolate">
+          {viewMode === "combined" && <div className="flex-[0.85] min-h-[180px] relative z-0 isolate">
             <ProductPreview
               model={productModel}
               tshirtColor={tshirtColor}
@@ -471,7 +570,7 @@ function DesignerContent() {
               selectedTexture={selectedTexture}
               onViewChange={handleViewChange}
             />
-          </div>
+          </div>}
         </div>
 
         {/* Botón flotante agregar al carrito */}

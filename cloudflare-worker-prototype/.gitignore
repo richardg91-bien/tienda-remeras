@@ -1,3 +1,6 @@
 node_modules/
 .wrangler/
 .wrangler-local-home/
+.dev.vars
+.wrangler-state-phase1c/
+.wrangler/phase1c-test-data/

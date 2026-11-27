@@ -72,12 +72,18 @@ export function adaptCanvasToSurface(canvasJson, sourceSize, targetSize) {
 
 export function getProductionSize(model, surface) {
   const dpi = Number(model?.production_template?.resolutionDpi) || 300;
+  const format = model?.production_template?.format || "PNG";
+  const colorMode = model?.production_template?.colorMode || "sRGB";
   const widthMm = Number(surface?.widthMm || surface?.diameterMm || 0);
   const heightMm = Number(surface?.heightMm || surface?.diameterMm || 0);
   if (!widthMm || !heightMm) return null;
 
   return {
     dpi,
+    format,
+    colorMode,
+    widthPx: Math.round(widthMm / 25.4 * dpi),
+    heightPx: Math.round(heightMm / 25.4 * dpi),
     width: Math.round(widthMm / 25.4 * dpi),
     height: Math.round(heightMm / 25.4 * dpi),
   };

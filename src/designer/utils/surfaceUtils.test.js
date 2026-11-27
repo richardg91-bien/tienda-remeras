@@ -51,6 +51,14 @@ describe("surfaceUtils", () => {
     expect(getProductionSize(
       { production_template: { resolutionDpi: 300 } },
       { widthMm: 200, heightMm: 90 },
-    )).toEqual({ dpi: 300, width: 2362, height: 1063 });
+    )).toEqual({
+      dpi: 300,
+      format: "PNG",
+      colorMode: "sRGB",
+      widthPx: 2362,
+      heightPx: 1063,
+      width: 2362,
+      height: 1063,
+    });
   });
 });

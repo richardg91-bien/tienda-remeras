@@ -3,8 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --local --port 8787",
-    "test:local": "node test-local.mjs",
+    "dev": "wrangler dev --local --config wrangler.jsonc --port 8787 --persist-to .wrangler/phase1c-state",
+    "migrate:local": "wrangler d1 migrations apply anathel-mvp-local --local --config wrangler.jsonc --persist-to .wrangler/phase1c-state",
+    "test:local": "powershell -NoProfile -ExecutionPolicy Bypass -File ./test-local-mvp.ps1",
+    "test:api-local": "node test-local.mjs",
+    "test:restart-local": "node test-persistence-after-restart.mjs",
     "profile:bcrypt": "node profile-bcrypt.mjs",
     "dev:pg-local": "wrangler dev --local --config wrangler.pg-lab.jsonc --port 8788",
     "test:pg-local": "node test-pg-local.mjs"

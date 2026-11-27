@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../data/products";
+import { buildDesignerSelectionUrl } from "../lib/designerSelection";
 
 export default function ProductCard({ product }) {
   const [selectedSize, setSelectedSize] = useState(null);
@@ -197,6 +198,15 @@ export default function ProductCard({ product }) {
             )}
           </AnimatePresence>
         </button>
+        <Link
+          to={buildDesignerSelectionUrl(product, { size: selectedSize })}
+          className="mt-2 w-full py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest
+                     border border-primary/30 text-primary hover:bg-primary/10 transition-colors
+                     flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined text-[16px]">design_services</span>
+          Personalizar
+        </Link>
       </div>
     </motion.article>
   );

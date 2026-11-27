@@ -37,9 +37,23 @@ export default function AssetLibrary({ manualSync }) {
   const [totalItems, setTotalItems] = useState(0);
   const [view, setView]             = useState("menu");
   const [scope, setScope]           = useState("shared");
+  const [apiMode, setApiMode]       = useState("checking");
 
-  // Carga contadores
+  // The Cloudflare Worker exposes private R2 assets, while the legacy API owns
+  // the shared catalog at /api/assets. Detect the configured API before loading either.
   useEffect(() => {
+    let active = true;
+    fetch(`${API}/health`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((health) => {
+        if (active) setApiMode(health?.persistence === "d1+r2" ? "cloudflare" : "shared");
+      })
+      .catch(() => { if (active) setApiMode("shared"); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (apiMode !== "shared") return;
     fetch(`${API}/api/assets/categories`)
       .then(r => r.json())
       .then(d => {
@@ -49,7 +63,7 @@ export default function AssetLibrary({ manualSync }) {
         setCounts(map);
       })
       .catch(() => {});
-  }, []);
+  }, [apiMode]);
 
   // Carga imágenes
   const fetchAssets = useCallback(async () => {
@@ -76,6 +90,9 @@ export default function AssetLibrary({ manualSync }) {
     setLoading(true);
     setError("");
     try {
+      if (!localStorage.getItem("accessToken")) {
+        throw new Error("Iniciá sesión para consultar tus imágenes privadas en R2.");
+      }
       const privateAssets = await listPrivateDesignAssets();
       setAssets(privateAssets);
       setTotalPages(1);
@@ -87,8 +104,11 @@ export default function AssetLibrary({ manualSync }) {
     }
   }, []);
 
-  const loadAssets = scope === "private" ? fetchPrivateAssets : fetchAssets;
-  useEffect(() => { loadAssets(); }, [loadAssets]);
+  const cloudflareR2 = apiMode === "cloudflare";
+  const loadAssets = cloudflareR2 || scope === "private" ? fetchPrivateAssets : fetchAssets;
+  useEffect(() => {
+    if (apiMode !== "checking") loadAssets();
+  }, [apiMode, loadAssets]);
   useEffect(() => { setPage(1); }, [category, search]); // eslint-disable-line react-hooks/set-state-in-effect
 
   const selectCategory = (cat) => {
@@ -148,7 +168,7 @@ export default function AssetLibrary({ manualSync }) {
           <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-1">
             Elegí una categoría
           </p>
-          {CATEGORIES.map((cat) => (
+          {apiMode !== "cloudflare" && CATEGORIES.map((cat) => (
             <button key={cat.value} onClick={() => selectCategory(cat.value)}
               className="flex items-center gap-3 p-3 rounded-2xl border border-white/8
                          hover:border-primary/40 hover:bg-white/5 transition-all duration-200
@@ -182,12 +202,17 @@ export default function AssetLibrary({ manualSync }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-black text-white">Mis archivos</p>
-                <p className="text-[10px] text-gray-600">Imágenes privadas</p>
+                <p className="text-[10px] text-gray-600">Imágenes privadas de tu proyecto</p>
               </div>
               <span className="material-symbols-outlined text-gray-700 text-[16px] group-hover:text-primary transition-colors">
                 chevron_right
               </span>
             </button>
+          )}
+          {cloudflareR2 && !localStorage.getItem("accessToken") && (
+            <p role="status" className="rounded-xl border border-white/10 p-3 text-xs text-gray-400">
+              Iniciá sesión para consultar las imágenes privadas de tu proyecto en R2.
+            </p>
           )}
         </div>
       )}
@@ -211,7 +236,7 @@ export default function AssetLibrary({ manualSync }) {
           </div>
 
           {/* Buscador */}
-          {scope === "shared" && <div className="relative flex-shrink-0">
+          {!cloudflareR2 && scope === "shared" && <div className="relative flex-shrink-0">
             <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2
                              text-gray-600 text-[15px] pointer-events-none">search</span>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
@@ -269,7 +294,7 @@ export default function AssetLibrary({ manualSync }) {
             )}
 
             {/* Paginación */}
-            {!loading && scope === "shared" && totalPages > 1 && (
+            {!loading && !cloudflareR2 && scope === "shared" && totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-3 pb-2">
                 <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}
                   className="p-1.5 rounded-lg border border-white/10 text-gray-500

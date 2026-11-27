@@ -1,0 +1,5 @@
+JWT_SECRET=replace-with-a-random-local-development-secret
+JWT_REFRESH_SECRET=replace-with-an-independent-random-local-development-secret
+ASSET_URL_SECRET=replace-with-a-third-random-local-development-secret
+RATE_LIMIT_SECRET=replace-with-a-fourth-random-local-development-secret
+AUTH_RATE_LIMIT=100

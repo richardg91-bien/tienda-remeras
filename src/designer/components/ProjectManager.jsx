@@ -5,6 +5,8 @@ import {
   setSelectedSurfaceId,
   setSelectedView,
   setTshirtColor,
+  setSelectedCatalogProductId,
+  setSelectedSize,
 } from "../store/designerSlice.js";
 import canvasStorageManager from "../utils/canvasStorageManager.js";
 import {
@@ -44,6 +46,8 @@ export default function ProjectManager({
 }) {
   const dispatch = useDispatch();
   const selectedSurfaceId = useSelector((state) => state.designer.selectedSurfaceId);
+  const selectedCatalogProductId = useSelector((state) => state.designer.selectedCatalogProductId);
+  const selectedSize = useSelector((state) => state.designer.selectedSize);
   const [name, setName] = useState("Mi diseño");
   const [projects, setProjects] = useState([]);
   const [projectId, setProjectId] = useState(null);
@@ -117,6 +121,8 @@ export default function ProjectManager({
             ? { color: tshirtColor }
             : {}),
           surfaceId: activeSurface?.id || "front",
+          ...(selectedCatalogProductId ? { catalogProductId: selectedCatalogProductId } : {}),
+          ...(selectedSize ? { size: selectedSize } : {}),
         },
         canvas: {
           version: "7.4.0",
@@ -185,6 +191,10 @@ export default function ProjectManager({
         dispatch(setSelectedView(surfaceIndex === 1 ? "back" : "front"));
       }
       if (project.variant?.color) dispatch(setTshirtColor(project.variant.color));
+      if (project.variant?.catalogProductId) {
+        dispatch(setSelectedCatalogProductId(String(project.variant.catalogProductId)));
+      }
+      if (project.variant?.size) dispatch(setSelectedSize(project.variant.size));
       onProjectLoad?.();
       setProjectId(project.id);
       setName(project.name || "Mi diseño");

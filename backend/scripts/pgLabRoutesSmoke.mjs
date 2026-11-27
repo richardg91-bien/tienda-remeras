@@ -93,6 +93,7 @@ try {
 
   assert.equal((await request("/api/projects")).status, 401);
   const projectPayload = {
+    id: randomUUID(),
     name: "Synthetic route project",
     productRef: "mug-standard",
     productCategory: "sublimacion",
@@ -107,11 +108,56 @@ try {
   let created = (await createResponse.json()).project;
   projectId = created.id;
   assert.ok(projectId);
+  assert.notEqual(projectId, projectPayload.id, "POST must create a new server-generated project ID");
   assert.equal(created.product_ref, "mug-standard");
   assert.deepEqual(created.variant, projectPayload.variant);
   assert.deepEqual(created.canvas, projectPayload.canvas);
+  assert.equal(created.production.productRef, "mug-standard");
+  assert.equal(created.production.productCategory, "sublimacion");
+  assert.deepEqual(created.production.products["mug-standard"].surfaces.wrap, {
+    widthMm: 200, heightMm: 90, dpi: 300, widthPx: 2362, heightPx: 1063,
+  });
   assert.equal(Object.hasOwn(created, "owner_id"), false);
   console.log("POST /api/projects: 201; payload preserved; client owner_id ignored");
+
+  const adultTeePayload = {
+    name: "Adult tee with both sides",
+    productRef: "tee-classic",
+    productCategory: "textil",
+    variant: { size: "L", color: "Negro", surfaceId: "back", catalogProductId: 1 },
+    canvas: { surfaces: {
+      front: { width: 450, height: 600, objects: [{ type: "textbox", text: "Front" }] },
+      back: { width: 450, height: 600, objects: [{ type: "image", assetId: "shared-asset" }] },
+    } },
+  };
+  const adultTeeResponse = await request("/api/projects", { method: "POST", userId: userIds[0], body: adultTeePayload });
+  assert.equal(adultTeeResponse.status, 201);
+  const adultTeeProject = (await adultTeeResponse.json()).project;
+  assert.equal(adultTeeProject.product_ref, "tee-classic");
+  assert.deepEqual(Object.keys(adultTeeProject.canvas.surfaces).sort(), ["back", "front"]);
+  assert.equal(adultTeeProject.production.variant.size, "L");
+  assert.deepEqual(adultTeeProject.production.products["tee-classic"].surfaces.front, {
+    widthMm: 300, heightMm: 400, dpi: 300, widthPx: 3543, heightPx: 4724,
+  });
+  const invalidSurfaceResponse = await request("/api/projects", {
+    method: "POST", userId: userIds[0], body: { ...adultTeePayload, canvas: { surfaces: { sleeve: { objects: [] } } } },
+  });
+  assert.equal(invalidSurfaceResponse.status, 400);
+  const invalidSizeResponse = await request("/api/projects", {
+    method: "POST", userId: userIds[0], body: { ...adultTeePayload, variant: { size: "XXXL" } },
+  });
+  assert.equal(invalidSizeResponse.status, 400);
+  const invalidCatalogResponse = await request("/api/projects", {
+    method: "POST", userId: userIds[0], body: { ...adultTeePayload, variant: { ...adultTeePayload.variant, catalogProductId: 999 } },
+  });
+  assert.equal(invalidCatalogResponse.status, 400);
+  const unavailableCatalogSizeResponse = await request("/api/projects", {
+    method: "POST", userId: userIds[0], body: { ...adultTeePayload, variant: { ...adultTeePayload.variant, catalogProductId: 8, size: "XXL" } },
+  });
+  assert.equal(unavailableCatalogSizeResponse.status, 400);
+  await request(`/api/projects/${adultTeeProject.id}`, { method: "DELETE", userId: userIds[0] });
+  console.log("adult tee association: product, size, front/back surfaces, and 300-DPI production dimensions passed");
+  console.log("invalid catalog surface and unsupported size rejected with 400");
 
   const getResponse = await request(`/api/projects/${projectId}`, { userId: userIds[0] });
   assert.equal(getResponse.status, 200);

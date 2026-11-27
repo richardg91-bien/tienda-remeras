@@ -9,6 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:pg-lab": "node scripts/pgLabSmoke.mjs && node scripts/pgLabRoutesSmoke.mjs && node scripts/pgLabAssetsDesignsSmoke.mjs && node scripts/pgLabUsersSmoke.mjs && node scripts/pgLabOrdersSmoke.mjs",
+    "test:projects": "node scripts/pgLabRoutesSmoke.mjs && node scripts/pgLabProjectAuthSmoke.mjs && node scripts/testPrivateAssets.mjs",
     "start": "node server.js"
   },
   "keywords": [],

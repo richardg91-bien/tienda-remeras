@@ -5,6 +5,7 @@ import { products, formatPrice } from "../data/products";
 import { useCart } from "../context/CartContext";
 import { prefetchStudio } from "../lib/prefetchStudio";
 import Products from "../components/Products";
+import { buildDesignerSelectionUrl } from "../lib/designerSelection";
 
 // Paleta oficial de colores de remeras
 const PALETTE = [
@@ -45,6 +46,12 @@ export default function Producto() {
   const [added, setAdded]                 = useState(false);
   const [sizeError, setSizeError]         = useState(false);
   const [qty, setQty]                     = useState(1);
+  const designerUrl = product
+    ? buildDesignerSelectionUrl(product, {
+      size: selectedSize,
+      color: PALETTE.find((entry) => entry.name === selectedColor)?.hex,
+    })
+    : "/disenar";
 
   // Productos relacionados
   const related = products
@@ -328,7 +335,7 @@ export default function Producto() {
             </div>
 
             {/* CTA Design Studio */}
-            <Link to="/disenar"
+            <Link to={designerUrl}
               onMouseEnter={prefetchStudio}
               onFocus={prefetchStudio}
               className="flex items-center gap-3 p-4 glass-panel-accent rounded-2xl

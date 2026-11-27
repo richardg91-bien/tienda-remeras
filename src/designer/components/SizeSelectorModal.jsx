@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useCanvas } from "../hooks/useCanvas.jsx";
 import { useCart } from "../../context/CartContext.jsx";
+import { setSelectedSize as setDesignerSelectedSize } from "../store/designerSlice.js";
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
@@ -16,10 +17,12 @@ const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
  */
 export default function SizeSelectorModal({ frontCanvas, backCanvas }) {
   const [show, setShow] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(null);
+  const storedSelectedSize = useSelector((state) => state.designer.selectedSize);
+  const [selectedSize, setSelectedSize] = useState(storedSelectedSize);
   const [addingToCart, setAddingToCart] = useState(false);
 
   const tshirtColor = useSelector((s) => s.designer.tshirtColor);
+  const dispatch = useDispatch();
   const { activeCanvas } = useCanvas();
   const { addItem, openCart } = useCart();
 
@@ -27,18 +30,19 @@ export default function SizeSelectorModal({ frontCanvas, backCanvas }) {
   // Si el evento trae detail.size (pestaña Carrito), lo preselecciona.
   useEffect(() => {
     const handler = (e) => {
-      if (e.detail?.size) setSelectedSize(e.detail.size);
+      setSelectedSize(e.detail?.size || storedSelectedSize || null);
       setShow(true);
     };
     document.addEventListener("studio:addToCart", handler);
     return () => document.removeEventListener("studio:addToCart", handler);
-  }, []);
+  }, [storedSelectedSize]);
 
   const handleClose = () => { setShow(false); setSelectedSize(null); };
 
   const handleAddToCart = async () => {
     if (!selectedSize) return;
     setAddingToCart(true);
+    dispatch(setDesignerSelectedSize(selectedSize));
 
     try {
       const canvas    = activeCanvas;
